@@ -12,7 +12,11 @@ import { Navigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 
 function App() {
-  const {authUser,checkAuth,isCheckingAuth}= useAuthStore();
+  const {authUser,checkAuth,isCheckingAuth,onlineUsers}= useAuthStore();
+  
+  if(!onlineUsers) console.log("From App : : no online users")
+  else console.log(`From APP :: ${onlineUsers}`)
+
   useEffect(()=>{
     checkAuth();
   },[checkAuth])

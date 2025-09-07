@@ -2,7 +2,7 @@ import React, { useState,useEffect } from 'react'
 import { useAuthStore } from '../store/useAuthStore.js';
 import { MessageSquare, User, Mail, Lock, EyeOff, Eye, Loader2 } from 'lucide-react';
 import AuthImagePattern from '../components/AuthImagePattern.jsx';
-import { useNavigate } from 'react-router-dom'; // 👈 add this at the top
+import { useNavigate } from 'react-router-dom'; //  add this at the top
 
 
 
@@ -21,7 +21,7 @@ function SignUpPage() {
   const navigate = useNavigate();
   useEffect(() => {
     if (authUser) {
-      // ✅ Redirect once signup is successful
+      //Redirect once signup is successful
       navigate("/");
     }
   }, [authUser, navigate]);
@@ -44,7 +44,7 @@ const handleSubmit = async (e) => {
   if (success === true) {
     try {
       await signup(formData); 
-      navigate('/'); // 👈 navigate to home on success
+      navigate('/'); // navigate to home on success
     } catch (error) {
       console.log("Signup error:", error);
     }
@@ -58,8 +58,8 @@ const handleSubmit = async (e) => {
         {/* logo */}
       <div className='text-center mb-8' >
         <div className='flex flex-col items-center gap-2 group'>
-          <div className='size-12 rounded-xl bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors '>
-            <MessageSquare className='size-6 text-primary'/>
+          <div className='size-14 rounded-xl bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors '>
+            <MessageSquare className='size-7 text-primary'/>
           </div>
           <h1 className='text-2xl font-bold mt-2'>Create Account</h1>
           <p className='text-base-content/60'>Get started with your free account</p>
@@ -72,7 +72,7 @@ const handleSubmit = async (e) => {
             <span className='label-text font-medium'>Full Name</span>
           </label>
           <div className="relative">
-            <div className='absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none '>
+            <div className='absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none z-10'>
               <User className="size-5 text-base-content/40"/>
             </div>
             <input 
@@ -88,8 +88,9 @@ const handleSubmit = async (e) => {
           <label className='label'>
             <span className='label-text font-medium'>Email</span>
           </label>
+
           <div className="relative">
-            <div className='absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none '>
+            <div className='absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none z-10'>
               <Mail className="size-5 text-base-content/40" />
             </div>
             <input 
@@ -106,7 +107,7 @@ const handleSubmit = async (e) => {
             <span className='label-text font-medium'>Password </span>
           </label>
           <div className="relative">
-            <div className='absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none '>
+            <div className='absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none z-10'>
               <Lock className="size-5 text-base-content/40" />
             </div>
             <input 
@@ -118,7 +119,7 @@ const handleSubmit = async (e) => {
               />
             <button 
               type='button'
-              className='absolute inset-y-0 right-0 pr-3 flex items-center'
+              className='absolute inset-y-0 right-0 pr-3 flex items-center z-10'
               onClick={()=>setShowPassword(!showPassword)}
             >
               {showPassword ? (
@@ -130,7 +131,7 @@ const handleSubmit = async (e) => {
           </div>
         </div>
 
-        <button type='submit' className='btn btn-primary w-full' disabled={isSigningUp}>
+        <button type='submit' className='btn btn-primary w-full z-10' disabled={isSigningUp}>
           {isSigningUp ? (
             <>
             <Loader2 className='size-5 animate-spin '/>

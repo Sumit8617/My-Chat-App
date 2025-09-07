@@ -4,7 +4,7 @@ import { useChatStore } from "../store/useChatStore";
 
 function ChatHeader() {
   const { selectedUser, setSelectedUser } = useChatStore();
-  const { onlineUsers } = useAuthStore();
+  const { onlineUsers }  = useAuthStore();
 
   if (!selectedUser) return null;
 
