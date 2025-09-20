@@ -2,11 +2,12 @@ import {create} from 'zustand';
 import {axiosInstance} from '../libs/axios.js';
 import toast from 'react-hot-toast';
 import {io} from 'socket.io-client';
-import { use } from 'react';
 
-const BASE_URL= import.meta.env.BASE_URL;
+const BASE_URL= import.meta.env.VITE_BASE_URL;
+console.log("Coming From AutSlice BASE_URL:",BASE_URL)
 
-export const useAuthStore =create((set,get)=>({
+export const useAuthStore = create((set,get)=>({
+    // Initial State
     authUser: null,
     isSigningUp:false,
     isLoggingIn:false,
@@ -16,10 +17,13 @@ export const useAuthStore =create((set,get)=>({
     socket:null,
 
     checkAuth: async()=>{
+        console.log("checkAuth called")
         try {
             const res = await axiosInstance.get("/auth/check")
-            set({authUser:res.data})
+            console.log("From useAuthStore checkAuth:",res.data)
+            set({authUser : res.data})
             get().connectSocket();
+            console.log("Auth User set in checkAuth:",authUser)
         } catch (error) {
             console.log("Error in checkAuth:",error)
             set({authUser:null})
@@ -47,6 +51,7 @@ export const useAuthStore =create((set,get)=>({
         try {
             const res = await axiosInstance.post("/auth/login",data)
             set({authUser:res.data})
+            console.log("From useAuthStore login:",res.data)
             toast.success("Logged in successfully")
             get().connectSocket();
         } catch (error) {
@@ -83,11 +88,12 @@ export const useAuthStore =create((set,get)=>({
 
     connectSocket : ()=>{
         const {authUser} = get();
-        if(!authUser || get().socket?.connect) return;
+        if(!authUser || get().socket?.connected) return;
         const socket = io(BASE_URL,{
             query:{
                 userId: authUser._id, 
-            }
+            },
+            transports: ['websocket'],
         })
         socket.connect();
         set({socket:socket});
