@@ -2,6 +2,7 @@ import User from "../models/user.model.js";
 import { generateToken } from "../lib/utils.js";
 import bcrypt from "bcrypt";
 import cloudinary from '../lib/cloudinary.js'
+import jwt from "jsonwebtoken";
 
 export const signup = async (req, res) => {
   const { email, fullName, password } = req.body;
@@ -44,32 +45,40 @@ export const signup = async (req, res) => {
 };
 
 export const login = async (req, res) => {
-  const { email, password } = req.body;
   try {
-    if (!email || !password) {
-      return res.status(400).json({ message: "All fields are required" });
-    }
-
+    const { email, password } = req.body;
     const user = await User.findOne({ email });
+
     if (!user) {
-      return res.status(400).json({ message: "Invalid Credentials" });
+      return res.status(400).json({ message: "Invalid credentials" });
     }
 
-    const isPasswordCorrect = await bcrypt.compare(password, user.password);
-    if (!isPasswordCorrect) {
-      return res.status(400).json({ message: "Invalid Credentials" });
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
+      return res.status(400).json({ message: "Invalid credentials" });
     }
 
-    generateToken(user._id, res);
-    res.status(200).json({
-      _id: user._id,
-      email: user.email,
-      fullName: user.fullName,
-      profilePicture: user.profilePicture,
+    const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, {
+      expiresIn: "7d",
+    });
+
+    res.cookie("jwt", token, {
+      httpOnly: true,
+  secure:true,
+  sameSite:  "none" ,
+  maxAge: 7 * 24 * 60 * 60 * 1000,
+  path:"/"
+    });
+
+    return res.json({
+      message: "Login successful",
+      user: { _id: user._id, name: user.name, email: user.email },
     });
   } catch (error) {
-    console.log("Error in login controller:", error);
-    return res.status(500).json({ message: "Internal server error" });
+    console.error("Error in login:", error);
+    if (!res.headersSent) {
+      return res.status(500).json({ message: "Internal server error" });
+    }
   }
 };
 

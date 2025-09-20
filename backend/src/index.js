@@ -13,8 +13,10 @@ dotenv.config({
 });
 const PORT = process.env.PORT;
 
-app.use(express.json());
-app.use(express.urlencoded({extended:true}));
+app.use(express.json({
+    limit : '50kb'
+}));
+app.use(express.urlencoded({extended:true, limit : '50kb'}));
 app.use(cookieParser());
 app.use(cors({
     origin: process.env.CORS_ORIGIN,

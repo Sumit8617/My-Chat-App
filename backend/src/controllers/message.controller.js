@@ -6,8 +6,10 @@ import { getReceiverSocketId, io } from "../lib/socket.js";
 export const getUsersForSidebar = async (req, res) => {
     try {
         const loggedInUserId = req.user._id;
-        const filteredUsers =await User.find({_id:{ $ne: loggedInUserId }}).select("-password")
-        return res.status(200).json(filteredUsers);
+        console.log("Logged in user ID:", loggedInUserId);
+        const filteredUsers = await User.find({_id:{ $ne: loggedInUserId }}).select("-password")
+        console.log("From getUsersForSidebar backend:",filteredUsers)
+        return res.status(200).json(filteredUsers, {message : "Users fetched successfully"});
     } catch (error) {
         console.log("Error in getUsersForSidebar:", error);
         return res.status(500).json({ message: "Internal server error" });
