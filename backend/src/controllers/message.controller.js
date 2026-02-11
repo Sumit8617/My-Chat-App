@@ -36,14 +36,15 @@ export const getMessages = async (req, res) => {
 
 export const sendMessage = async (req,res) =>{
     try {
-        const{text,image} = req.body;
+        const{text} = req.body;
         const {id: receiverId} = req.params;
         const senderId = req.user._id;
 
-        let imageURL;
-        if(image){
-            const uploadResponse = await cloudinary.uploader.upload(image);
-            imageURL = uploadResponse.secure_url
+        let imageURL="";
+        if(req.file){
+            const base64Image = `data:${req.file.mimetype};base64,${req.file.buffer.toString("base64")}`;
+            const uploadResponse = await cloudinary.uploader.upload(base64Image);
+            imageURL = uploadResponse.secure_url;
         }
         
         const newMessage = new Message({
