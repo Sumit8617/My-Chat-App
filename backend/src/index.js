@@ -8,15 +8,15 @@ import cors from "cors";
 import {app, server} from "./lib/socket.js";
 
 
-dotenv.config({
-    path : '../.env'
-});
+dotenv.config(
+    // { path : '../.env'}
+);
 const PORT = process.env.PORT;
 
 app.use(express.json({
-    limit : '50kb'
+    limit : '5mb'
 }));
-app.use(express.urlencoded({extended:true, limit : '50kb'}));
+app.use(express.urlencoded({extended:true, limit : '5mb'}));
 app.use(cookieParser());
 app.use(cors({
     origin: process.env.CORS_ORIGIN,

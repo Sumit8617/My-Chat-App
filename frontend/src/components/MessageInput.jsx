@@ -1,6 +1,7 @@
 import React, { useRef, useState } from 'react'
 import { useChatStore } from '../store/useChatStore'
 import { Image, Send, X } from 'lucide-react'
+import { toast } from 'react-hot-toast'
 
 function MessageInput() {
     const [text,setText] =useState("")
@@ -14,11 +15,13 @@ function MessageInput() {
         toast.error("Please select an image file.")
         return
       }
-      const reader = new FileReader()
-      reader.onloadend =()=>{
-        setImagePreview(reader.result)
-      }
-      reader.readAsDataURL(file)
+      
+      // const reader = new FileReader()
+      // reader.onloadend =()=>{
+      //   setImagePreview(reader.result)
+      // }
+      // reader.readAsDataURL(file)
+      setImagePreview(file);
     }
 
     const removeImage = () => {
@@ -50,7 +53,7 @@ function MessageInput() {
         <div className="mb-3 flex items-center gap-2">
           <div className="relative">
             <img
-              src={imagePreview}
+              src={URL.createObjectURL(imagePreview)}
               alt="Preview"
               className="w-20 h-20 object-cover rounded-lg border border-zinc-700"
             />
