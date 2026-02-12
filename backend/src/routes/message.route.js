@@ -1,7 +1,7 @@
 import express from "express";
 import { protectRoute } from "../middleware/auth.middleware.js";
 import { getUsersForSidebar,getMessages,sendMessage } from "../controllers/message.controller.js";
-import { upload } from "../middleware/upload.js";
+import upload from "../middleware/upload.js";
 
 const router = express.Router();
 
