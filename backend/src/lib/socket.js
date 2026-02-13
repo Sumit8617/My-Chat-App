@@ -22,13 +22,33 @@ const io = new Server(server, {
 io.on("connection", (socket) => {
   console.log("✅ User connected:", socket.id);
 
-  const userId = socket.handshake.query?.userId;
+  const userId = socket.handshake.query?.userId?.toString();
+
   if (userId) {
     userSocketMap[userId] = socket.id;
     console.log(`User ${userId} mapped to socket ${socket.id}`);
   }
 
   io.emit("getOnlineUsers", Object.keys(userSocketMap));
+
+  socket.on("typing", (receiverId) => {
+
+    const receiverSocketId = getReceiverSocketId(receiverId);
+
+    if (receiverSocketId) {
+      io.to(receiverSocketId).emit("typing", userId);
+    }
+  });
+
+  socket.on("stopTyping", (receiverId) => {
+
+    const receiverSocketId = getReceiverSocketId(receiverId);
+    console.log("Typing event received for:", receiverId);
+
+    if (receiverSocketId) {
+      io.to(receiverSocketId).emit("stopTyping", userId);
+    }
+  });
 
   socket.on("disconnect", () => {
     console.log("❌ User disconnected:", socket.id);
