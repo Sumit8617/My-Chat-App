@@ -18,6 +18,7 @@ function ChatContainer() {
     isTyping,
     subscribeToTyping,
     unsubscribeFromTyping,
+    markMessagesAsRead,
   } = useChatStore();
   const { authUser } = useAuthStore();
 
@@ -27,7 +28,7 @@ function ChatContainer() {
     subscribeToMessages();
 
     return () => unsubscribeFromMessages();
-  }, [subscribeToMessages, unsubscribeFromMessages]);
+  }, []);
 
   useEffect(() => {
     if (selectedUser?._id) {
@@ -36,18 +37,18 @@ function ChatContainer() {
   }, [selectedUser, getMessages]);
 
   useEffect(() => {
+    if (selectedUser?._id) {
+      markMessagesAsRead();
+    }
+  }, [selectedUser]);
+
+  useEffect(() => {
+    if (!selectedUser?._id) return;
     subscribeToTyping();
 
     return () => unsubscribeFromTyping();
-  }, [selectedUser]);
+  }, [selectedUser?._id]);
 
-  // useEffect(()=>{
-  //   getMessages(selectedUser._id)
-
-  //   subscribeToMessages()
-
-  //   return ()=> unsubscribeFromMessages()
-  // },[selectedUser, getMessages,subscribeToMessages,unsubscribeFromMessages])
 
   useEffect(() => {
     if (messageEndRef.current && messages) {
@@ -111,7 +112,18 @@ function ChatContainer() {
                     />
                   )}
 
-                  {message.text}
+                  {message.text && <p>{message.text}</p>}
+
+                  {isOwnMessage && (
+                    <div className="flex items-center justify-end gap-1 text-[11px] mt-1 opacity-80">
+                      {message.status === "sending" && "⏳"}
+                      {message.status === "sent" && "✓"}
+                      {message.status === "delivered" && "✓✓"}
+                      {message.status === "read" && (
+                        <span className="text-sky-400">✓✓</span>
+                      )}
+                    </div>
+                  )}
                 </div>
               </div>
 

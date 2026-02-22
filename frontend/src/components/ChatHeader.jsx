@@ -35,7 +35,7 @@ function ChatHeader() {
                     <span className="w-1 h-1 bg-green-400 rounded-full animate-bounce delay-200"></span>
                   </span>
                 </span>
-              ) : onlineUsers?.includes(selectedUser._id) ? (
+              ) : onlineUsers?.includes(selectedUser._id.toString()) ? (
                 "Online"
               ) : (
                 "Offline"

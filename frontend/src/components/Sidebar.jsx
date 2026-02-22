@@ -27,7 +27,7 @@ function Sidebar() {
 
   const filteredUsers = showOnlineOnly
     ? users.filter((user) => {
-        return onlineUsers.includes(user._id);
+        return onlineUsers.includes(user._id.toString());
       })
     : users;
 
@@ -66,6 +66,7 @@ function Sidebar() {
               hover:bg-base-300 transition-colors
               ${selectedUser?._id === user._id ? "bg-base-300 ring-1 ring-base-300" : ""}
             `}
+            
           >
             <div className="relative mx-auto lg:mx-0">
               <img
@@ -73,14 +74,16 @@ function Sidebar() {
                 alt={user.name}
                 className="size-12 object-cover rounded-full"
               />
-              {onlineUsers.includes(user._id) && (
+              {onlineUsers.includes(user._id.toString()) && (
                 <span
                   className="absolute bottom-0 right-0 size-3 bg-green-500 
                   rounded-full ring-2 ring-zinc-900"
                 />
               )}
+
             </div>
 
+            
             {/* User info - only visible on larger screens */}
             <div className="hidden lg:block text-left min-w-0">
               <div className="font-medium truncate">{user.fullName}</div>
@@ -94,13 +97,22 @@ function Sidebar() {
                       <span className="w-1 h-1 bg-green-400 rounded-full animate-bounce delay-200"></span>
                     </span>
                   </span>
-                ) : onlineUsers.includes(user._id) ? (
+                ) : onlineUsers.includes(user._id.toString()) ? (
                   "Online"
                 ) : (
                   "Offline"
                 )}
               </div>
             </div>
+
+            {user.unreadCount > 0 && (
+                <span
+                  className="ml-auto bg-primary text-primary-content text-xs px-2 py-0.5 rounded-full min-w-[20px] text-center"
+                >
+                  {user.unreadCount}
+                </span>
+              )}
+
           </button>
         ))}
 
