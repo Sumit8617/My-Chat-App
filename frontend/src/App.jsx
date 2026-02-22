@@ -15,7 +15,7 @@ function App() {
   const {authUser,checkAuth,isCheckingAuth,onlineUsers}= useAuthStore();
   
   if(!onlineUsers) console.log("From App : : no online users")
-  else console.log(`From APP :: ${onlineUsers}`)
+  else console.log("From APP onlineUsers:", onlineUsers)
 
   useEffect(()=>{
     checkAuth();
