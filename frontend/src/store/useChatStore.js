@@ -257,12 +257,17 @@ export const useChatStore = create((set, get) => ({
   },
 
   setSelectedUser: (selectedUser) => {
-    set((state) => ({
-      selectedUser,
+    set((state) => {
+      if (!selectedUser) {
+        return { selectedUser };
+      }
 
-      users: state.users.map((u) =>
-        u._id === selectedUser._id ? { ...u, unreadCount: 0 } : u,
-      ),
-    }));
+      return {
+        selectedUser,
+        users: state.users.map((u) =>
+          u._id === selectedUser._id ? { ...u, unreadCount: 0 } : u,
+        ),
+      };
+    });
   },
 }));
