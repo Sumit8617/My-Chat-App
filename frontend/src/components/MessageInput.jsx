@@ -99,88 +99,85 @@ function MessageInput() {
 
 
   return (
-        <div className="p-4 w-full">
+  <div className="relative border-t border-base-300 p-3 bg-base-100">
 
-            {/* Image Preview */}
-            {previewUrl && (
-                <div className="mb-3 flex items-center gap-2">
-                    <div className="relative">
-                        <img
-                            src={previewUrl}
-                            alt="Preview"
-                            className="w-20 h-20 object-cover rounded-lg border border-zinc-700"
-                        />
-                        <button
-                            onClick={removeImage}
-                            type="button"
-                            className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-base-300 flex items-center justify-center"
-                        >
-                            <X className="size-3" />
-                        </button>
-                    </div>
-                </div>
-            )}
+    {/* IMAGE PREVIEW — WhatsApp style */}
+    {previewUrl && (
+      <div className="absolute bottom-full left-3 mb-2 bg-base-200 p-2 rounded-xl shadow-lg">
+        <div className="relative w-20 h-20">
+          <img
+            src={previewUrl}
+            alt="Preview"
+            className="w-full h-full object-cover rounded-lg"
+          />
 
-
-            <form onSubmit={handleSendMessage} className="flex items-center gap-2">
-
-                <div className="flex-1 flex gap-2">
-
-                    {/* ⭐ Recommended: textarea instead of input */}
-                    <textarea
-                        ref={inputRef}
-                        rows={1}
-                        placeholder="Type a message..."
-                        value={text}
-                        onChange={(e) => {
-                            setText(e.target.value);
-                            e.target.style.height = "auto";
-                            e.target.style.height = e.target.scrollHeight + "px";
-
-                            emitTyping();
-                            
-                            clearTimeout(typingTimeoutRef.current)
-                            typingTimeoutRef.current = setTimeout(() => {
-                              emitStopTyping();
-                            }, 1200);
-                        }}
-                        onKeyDown={handleKeyDown}
-                        className="w-full textarea textarea-bordered rounded-lg resize-none overflow-hidden min-h-[40px] max-h-[120px]"
-                    />
-
-
-                    <input
-                        type="file"
-                        accept="image/*"
-                        className="hidden"
-                        ref={fileInputRef}
-                        onChange={handleImageChange}
-                    />
-
-                    <button
-                        type="button"
-                        className={`hidden sm:flex btn btn-circle 
-                        ${imagePreview ? "text-emerald-500" : "text-zinc-400"}`}
-                        onClick={() => fileInputRef.current?.click()}
-                    >
-                        <Image size={20} />
-                    </button>
-
-                </div>
-
-
-                {/* Send Button */}
-                <button
-                    type="submit"
-                    className="btn btn-sm btn-circle"
-                    disabled={isSending || (!text.trim() && !imagePreview)}
-                >
-                    <Send size={22} />
-                </button>
-
-            </form>
+          <button
+            onClick={removeImage}
+            type="button"
+            className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-black/70 text-white flex items-center justify-center"
+          >
+            <X className="size-3" />
+          </button>
         </div>
-    )
-}
+      </div>
+    )}
 
+    {/* INPUT FORM */}
+    <form onSubmit={handleSendMessage} className="flex items-end gap-2">
+
+      {/* TEXTAREA */}
+      <textarea
+        ref={inputRef}
+        rows={1}
+        placeholder="Type a message..."
+        value={text}
+        onChange={(e) => {
+          setText(e.target.value);
+
+          e.target.style.height = "auto";
+          e.target.style.height = e.target.scrollHeight + "px";
+
+          emitTyping();
+          clearTimeout(typingTimeoutRef.current);
+          typingTimeoutRef.current = setTimeout(() => {
+            emitStopTyping();
+          }, 1200);
+        }}
+        onKeyDown={handleKeyDown}
+        className="flex-1 textarea textarea-bordered rounded-xl resize-none overflow-hidden min-h-[42px] max-h-[120px]"
+      />
+
+      {/* FILE INPUT */}
+      <input
+        type="file"
+        accept="image/*"
+        hidden
+        ref={fileInputRef}
+        onChange={handleImageChange}
+      />
+
+      {/* IMAGE BUTTON */}
+      <button
+        type="button"
+        onClick={() => fileInputRef.current?.click()}
+        className={`btn btn-circle ${
+          imagePreview ? "text-emerald-500" : "text-zinc-400"
+        }`}
+      >
+        <Image size={20} />
+      </button>
+
+      {/* SEND BUTTON */}
+      <button
+        type="submit"
+        className="btn btn-circle btn-primary"
+        disabled={isSending || (!text.trim() && !imagePreview)}
+      >
+        <Send size={20} />
+      </button>
+
+    </form>
+  </div>
+);
+}
 export default MessageInput

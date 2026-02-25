@@ -28,9 +28,9 @@ function App() {
   )
 
   return (
-    <div >
+    <div className="h-screen flex flex-col overflow-hidden">
       <Navbar/>
-
+      <div className="flex-1 min-h-0">
       <Routes>
         <Route path='/' element={authUser ? <HomePage/> : <Navigate to="/login"/>} />
         <Route path='/signup' element={ !authUser ? <SignUpPage/> : <Navigate to ="/"/> } />
@@ -38,7 +38,7 @@ function App() {
         <Route path='/settings' element={<SettingsPage/> } />
         <Route path='/profile' element={authUser ? <ProfilePage/> : <Navigate to ="/login" /> } />
       </Routes>
-
+    </div>
       <Toaster/>
     </div>
   )
