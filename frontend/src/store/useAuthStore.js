@@ -21,7 +21,7 @@ export const useAuthStore = create((set, get) => ({
     try {
       const res = await axiosInstance.get("/auth/check");
       console.log("From useAuthStore checkAuth:", res.data);
-      set({authUser : res.data.user})
+      set({ authUser: res.data.user });
       get().connectSocket();
       console.log("Auth User set in checkAuth:", res.data);
     } catch (error) {
@@ -36,7 +36,7 @@ export const useAuthStore = create((set, get) => ({
     set({ isSigningUp: true });
     try {
       const res = await axiosInstance.post("/auth/signup", data);
-      set({authUser: res.data.user});
+      set({ authUser: res.data.user });
       toast.success("Account created successfully");
       get().connectSocket();
     } catch (error) {
@@ -50,7 +50,7 @@ export const useAuthStore = create((set, get) => ({
     set({ isLoggingIn: true });
     try {
       const res = await axiosInstance.post("/auth/login", data);
-      set({authUser:res.data.user})
+      set({ authUser: res.data.user });
       console.log("From useAuthStore login:", res.data);
       toast.success("Logged in successfully");
       get().connectSocket();
@@ -76,7 +76,7 @@ export const useAuthStore = create((set, get) => ({
     set({ isUpdatingProfile: true });
     try {
       const res = await axiosInstance.put("/auth/update-profile", data);
-      set({ authUser: res.data });
+      set({ authUser: res.data.user });
       toast.success("Profile updated successfully");
     } catch (error) {
       console.log("error in update profile:", error);
@@ -96,7 +96,7 @@ export const useAuthStore = create((set, get) => ({
     }
 
     // 🚫 prevent duplicate connections
-    if (socket?.connected) return;
+    if (socket) return;
 
     console.log("🔌 Connecting socket for:", authUser._id);
 
@@ -121,9 +121,14 @@ export const useAuthStore = create((set, get) => ({
 
     newSocket.on("disconnect", () => {
       console.log("❌ Socket disconnected");
+      set({ onlineUsers: [] });
     });
   },
   disconnectSocket: () => {
-    if (get().socket?.connected) get().socket.disconnect();
+    const socket = get().socket;
+    if (socket) {
+      socket.disconnect();
+      set({ socket: null });
+    }
   },
 }));

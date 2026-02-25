@@ -5,7 +5,7 @@ function MessageSkeleton() {
   const skeletonMessages = Array.from({ length: 6 });
 
   return (
-    <div className="flex-1 overflow-y-auto p-4 space-y-4 animate-pulse">
+    <div className="flex-1 min-h-0 overflow-y-auto p-4 space-y-4 animate-pulse">
       {skeletonMessages.map((_, idx) => {
 
         const widths = ["w-24", "w-32", "w-40", "w-52", "w-64"];

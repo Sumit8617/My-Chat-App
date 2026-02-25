@@ -22,11 +22,10 @@ function Sidebar({ sidebarWidth = 280 }) {
   const expanded = sidebarWidth > 250;   
   useEffect(() => {
     getUsers();
-  }, [getUsers]);
+  }, []);
 
   const filteredUsers = users.filter((user) => {
-    const matchesSearch = user.fullName
-      .toLowerCase()
+    const matchesSearch = (user.fullName || "").toLowerCase()
       .includes(search.toLowerCase());
 
     const matchesOnline = showOnlineOnly
