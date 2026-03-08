@@ -1,14 +1,14 @@
 import User from "../models/user.model.js";
 import { generateToken } from "../lib/utils.js";
 import bcrypt from "bcrypt";
-import cloudinary from '../lib/cloudinary.js'
+import cloudinary from "../lib/cloudinary.js";
 import jwt from "jsonwebtoken";
 
 export const signup = async (req, res) => {
   const { email, fullName, password } = req.body;
   try {
     if (!email || !fullName || !password) {
-        return res.status(400).json({ message: "All fields are required" });
+      return res.status(400).json({ message: "All fields are required" });
     }
     if (password.length < 6) {
       return res
@@ -64,15 +64,15 @@ export const login = async (req, res) => {
 
     res.cookie("jwt", token, {
       httpOnly: true,
-  secure:true,
-  sameSite:  "none" ,
-  maxAge: 7 * 24 * 60 * 60 * 1000,
-  path:"/"
+      secure: process.env.NODE_ENV === "production",
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+      path: "/",
     });
 
     return res.json({
       message: "Login successful",
-      user: { _id: user._id, name: user.name, email: user.email },
+      user: { _id: user._id, fullName: user.fullName, email: user.email,profilePicture: user.profilePicture },
     });
   } catch (error) {
     console.error("Error in login:", error);
@@ -84,8 +84,8 @@ export const login = async (req, res) => {
 
 export const logout = (req, res) => {
   try {
-    res.cookie("jwt","",{maxAge:0})
-    return res.status(200).json({message:"Logged Out Successfully"})
+    res.cookie("jwt", "", { maxAge: 0 });
+    return res.status(200).json({ message: "Logged Out Successfully" });
   } catch (error) {
     console.log("Error in logout controller:", error);
     return res.status(500).json({ message: "Internal server error" });
@@ -93,33 +93,31 @@ export const logout = (req, res) => {
 };
 
 export const updateProfile = async (req, res) => {
-    try {
-        const {profilePicture} = req.body;
-        const userId = req.user._id
-        if(!profilePicture){
-            return res.status(400).json({ message: "Profile picture is required" });
-        }
-
-        const uploadResponse = await cloudinary.uploader.upload(profilePicture)
-        const updatedUser = await User.findByIdAndUpdate(
-            userId,
-            { profilePicture: uploadResponse.secure_url},
-            {new: true}
-        )
-        res.status(200).json(updatedUser)
-
-    } catch (error) {
-        console.log("Error in updateProfile controller:", error);
-        return res.status(500).json({ message: "Internal server error" });
+  try {
+    const { profilePicture } = req.body;
+    const userId = req.user._id;
+    if (!profilePicture) {
+      return res.status(400).json({ message: "Profile picture is required" });
     }
 
-}
+    const uploadResponse = await cloudinary.uploader.upload(profilePicture);
+    const updatedUser = await User.findByIdAndUpdate(
+      userId,
+      { profilePicture: uploadResponse.secure_url },
+      { new: true },
+    );
+    res.status(200).json(updatedUser);
+  } catch (error) {
+    console.log("Error in updateProfile controller:", error);
+    return res.status(500).json({ message: "Internal server error" });
+  }
+};
 
 export const checkAuth = (req, res) => {
-    try {
-       res.status(200).json(req.user) 
-    } catch (error) {
-        console.log("Error in checkAuth controller:", error);
-        return res.status(500).json({ message: "Internal server error" });
-    }
-}
+  try {
+    res.status(200).json({ user: req.user });
+  } catch (error) {
+    console.log("Error in checkAuth controller:", error);
+    return res.status(500).json({ message: "Internal server error" });
+  }
+};

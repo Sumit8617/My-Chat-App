@@ -1,49 +1,68 @@
-import React, { useEffect } from 'react'
-import Navbar from './components/Navbar.jsx'
-import { Routes, Route } from 'react-router-dom';
-import HomePage from './pages/HomePage.jsx'
-import SignUpPage from './pages/SignUpPage.jsx'
-import LoginPage from './pages/LoginPage.jsx'
-import SettingsPage from './pages/SettingsPage.jsx' 
-import ProfilePage from './pages/ProfilePage.jsx';
-import { useAuthStore } from './store/useAuthStore.js';
-import {Loader} from 'lucide-react'
-import { Navigate } from 'react-router-dom';
-import { Toaster } from 'react-hot-toast';
+import React, { useEffect } from "react";
+import Navbar from "./components/Navbar.jsx";
+import { Routes, Route } from "react-router-dom";
+import HomePage from "./pages/HomePage.jsx";
+import SignUpPage from "./pages/SignUpPage.jsx";
+import LoginPage from "./pages/LoginPage.jsx";
+import SettingsPage from "./pages/SettingsPage.jsx";
+import ProfilePage from "./pages/ProfilePage.jsx";
+import { useAuthStore } from "./store/useAuthStore.js";
+import { Loader } from "lucide-react";
+import { Navigate } from "react-router-dom";
+import { Toaster } from "react-hot-toast";
 
 function App() {
-  const {authUser,checkAuth,isCheckingAuth,onlineUsers}= useAuthStore();
-  
-  if(!onlineUsers) console.log("From App : : no online users")
-  else console.log(`From APP :: ${onlineUsers}`)
+  const { authUser, checkAuth, isCheckingAuth } = useAuthStore();
 
-  useEffect(()=>{
+  useEffect(() => {
+    // 🔥 Fire ping WITHOUT await — don't block checkAuth
+    const API = import.meta.env.VITE_BASE_URL;
+    fetch(`${API}/ping`, {
+      method: "GET",
+      credentials: "include",
+      cache: "no-store",
+    }).catch(() => {});
+
+    // ✅ Always runs on every refresh — no window.__appInitialized blocking it
     checkAuth();
-  },[checkAuth])
-  
-  console.log({authUser})
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  if(isCheckingAuth && !authUser) return (
-    <div className="flex items-center justify-center h-screen">
-      <Loader className= "size-10 animate-spin"/>
-    </div>
-  )
+  if (isCheckingAuth)
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <Loader className="size-10 animate-spin" />
+      </div>
+    );
 
   return (
-    <div >
-      <Navbar/>
+    <div className="h-screen flex flex-col overflow-hidden">
+      <Navbar />
 
-      <Routes>
-        <Route path='/' element={authUser ? <HomePage/> : <Navigate to="/login"/>} />
-        <Route path='/signup' element={ !authUser ? <SignUpPage/> : <Navigate to ="/"/> } />
-        <Route path='/login' element={ !authUser ? <LoginPage/>  : <Navigate to ="/"/>} />
-        <Route path='/settings' element={<SettingsPage/> } />
-        <Route path='/profile' element={authUser ? <ProfilePage/> : <Navigate to ="/login" /> } />
-      </Routes>
+      <div className="flex-1 min-h-0 h-full">
+        <Routes>
+          <Route
+            path="/"
+            element={authUser ? <HomePage /> : <Navigate to="/login" />}
+          />
+          <Route
+            path="/signup"
+            element={!authUser ? <SignUpPage /> : <Navigate to="/" />}
+          />
+          <Route
+            path="/login"
+            element={!authUser ? <LoginPage /> : <Navigate to="/" />}
+          />
+          <Route path="/settings" element={<SettingsPage />} />
+          <Route
+            path="/profile"
+            element={authUser ? <ProfilePage /> : <Navigate to="/login" />}
+          />
+        </Routes>
+      </div>
 
-      <Toaster/>
+      <Toaster />
     </div>
-  )
+  );
 }
 
-export default App
+export default App;
