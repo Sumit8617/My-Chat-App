@@ -9,6 +9,14 @@ function HomePage() {
 
   const [sidebarWidth, setSidebarWidth] = useState(280);
   const [isResizing, setIsResizing] = useState(false);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+
+  // track screen size
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   const startResizing = () => {
     setIsResizing(true);
@@ -37,39 +45,40 @@ function HomePage() {
 
   return (
     <div className="h-full bg-base-200">
-
-      {/* MOBILE = FULL SCREEN */}
-      {/* DESKTOP = CENTERED CARD */}
       <div className="h-full md:flex md:items-center md:justify-center md:pt-4 md:px-4">
-
         <div className="
           w-full h-full
           md:max-w-6xl
           md:h-[calc(100vh-8rem)]
           md:bg-base-100 md:rounded-lg md:shadow-xl
         ">
-
-          <div id="chat-layout" className="flex h-full min-h-0 rounded-lg overflow-hidden">
+          <div className="flex h-full min-h-0 rounded-lg overflow-hidden">
 
             {/* SIDEBAR */}
             <div
-              style={{ width: sidebarWidth }}
+              // Only apply fixed pixel width on desktop; full width on mobile
+              style={{ width: isMobile ? "100%" : sidebarWidth }}
               className={`
-                shrink-0 border-r border-base-300 bg-base-100
+                shrink-0 border-r border-base-300 bg-base-100 relative
                 ${selectedUser ? "hidden md:block" : "block"}
               `}
             >
-              <Sidebar sidebarWidth={sidebarWidth} />
+              <Sidebar sidebarWidth={isMobile ? 9999 : sidebarWidth} />
 
               {/* DESKTOP RESIZER */}
-              <div
-                onMouseDown={startResizing}
-                className="hidden md:block absolute top-0 right-0 w-1 h-full cursor-col-resize hover:bg-base-300"
-              />
+              {!isMobile && (
+                <div
+                  onMouseDown={startResizing}
+                  className="absolute top-0 right-0 w-1 h-full cursor-col-resize hover:bg-primary/30 z-10"
+                />
+              )}
             </div>
 
             {/* CHAT */}
-            <div className={`flex-1 flex flex-col min-h-0 ${selectedUser ? "block" : "hidden md:flex"}`}>
+            <div className={`
+              flex-1 flex flex-col min-h-0
+              ${selectedUser ? "flex" : "hidden md:flex"}
+            `}>
               {!selectedUser ? <NoChatSelected /> : <ChatContainer />}
             </div>
 
