@@ -13,20 +13,26 @@ import compression from "compression";
 dotenv.config(
     // { path : '../.env'}
 );
-const PORT = process.env.PORT;
+const PORT = process.env.PORT || 5000;
 
-app.use(compression());
-app.use(express.json({
-    limit : '1mb'
-}));
-app.use(express.urlencoded({extended:true, limit : '1mb'}));
-app.use(cookieParser());
+
 app.use(cors({
     origin: process.env.CORS_ORIGIN,
     credentials:true
 }))
 
+app.use(compression());
+app.use(express.json({limit : '1mb'}));
+app.use(express.urlencoded({extended:true, limit : '1mb'}));
+app.use(cookieParser());
 
+app.get("/ping", (req, res) => {
+  res.status(200).json({ status: "ok" });
+});
+
+app.get("/", (req, res) => {
+  res.send("Chat API running 🚀");
+});
 app.use("/api/auth", authRoutes)
 app.use("/api/messages", messageRoutes)
 
