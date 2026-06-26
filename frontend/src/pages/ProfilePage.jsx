@@ -46,7 +46,7 @@ function ProfilePage() {
                     type="file" 
                     id="avatar-upload" 
                     className='hidden' 
-                    accept='image/'
+                    accept='image/*'
                     onChange={handleImageUpload}
                     disabled={isUpdatingProfile} />
                 </label>

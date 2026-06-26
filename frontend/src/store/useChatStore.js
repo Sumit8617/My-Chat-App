@@ -9,7 +9,6 @@ export const useChatStore = create((set, get) => ({
   selectedUser: null,
   isUsersLoading: false,
   isMessagesLoading: false,
-  onlineUsers: [],
   typingUsers: new Set(),
 
   getUsers: async () => {
@@ -31,7 +30,7 @@ export const useChatStore = create((set, get) => ({
       const res = await axiosInstance.get(`/messages/${userId}`);
       set({ messages: res.data });
     } catch (error) {
-      toast.error(error.response?.data?.messages || "Something went wrong");
+      toast.error(error.response?.data?.message || "Something went wrong");
     } finally {
       set({ isMessagesLoading: false });
     }
@@ -106,17 +105,12 @@ export const useChatStore = create((set, get) => ({
 
     // NEW MESSAGE RECEIVED
     socket.on("newMessage", (newMessage) => {
-      const currentSelectedUser = get().selectedUser;
+      const selectedUserId = get().selectedUser?._id;
       const authUser = useAuthStore.getState().authUser;
 
-      if (newMessage.senderId !== authUser._id) {
-        get().moveUserToTop(newMessage.senderId);
-      }
 
-      if (
-        !currentSelectedUser ||
-        newMessage.senderId !== currentSelectedUser._id
-      ) {
+      get().moveUserToTop(newMessage.senderId);
+      if (!selectedUserId || newMessage.senderId !== selectedUserId) {
         set((state) => ({
           users: state.users.map((u) =>
             u._id === newMessage.senderId
@@ -127,14 +121,14 @@ export const useChatStore = create((set, get) => ({
       }
 
       set((state) => {
+        if (!state.typingUsers.has(newMessage.senderId)) return state;
+
         const updatedTyping = new Set(state.typingUsers);
         updatedTyping.delete(newMessage.senderId);
         return { typingUsers: updatedTyping };
       });
 
-      if (
-        !currentSelectedUser ||
-        newMessage.senderId !== currentSelectedUser._id
+      if (!selectedUserId || newMessage.senderId !== selectedUserId
       ) {
         return;
       }
@@ -203,6 +197,8 @@ export const useChatStore = create((set, get) => ({
 
       if (senderId === authUser._id) return;
       set((state) => {
+        if (state.typingUsers.has(senderId)) return state;
+
         const updated = new Set(state.typingUsers);
         updated.add(senderId);
 
@@ -216,6 +212,8 @@ export const useChatStore = create((set, get) => ({
 
       if (senderId === authUser._id) return;
       set((state) => {
+        if (!state.typingUsers.has(senderId)) return state;
+
         const updated = new Set(state.typingUsers);
         updated.delete(senderId);
 

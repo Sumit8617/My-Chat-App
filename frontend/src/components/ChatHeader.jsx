@@ -8,6 +8,13 @@ function ChatHeader() {
 
   if (!selectedUser) return null;
 
+  const onlineUsersSet = new Set(
+    onlineUsers?.map((id) => id.toString())
+  );
+
+  const isOnline = onlineUsersSet.has(selectedUser._id.toString());
+
+
   return (
     <div className="p-2.5 border-b border-base-300">
       <div className="flex items-center justify-between">
@@ -35,7 +42,7 @@ function ChatHeader() {
                     <span className="w-1 h-1 bg-green-400 rounded-full animate-bounce delay-200"></span>
                   </span>
                 </span>
-              ) : onlineUsers?.includes(selectedUser._id.toString()) ? (
+              ) : isOnline ? (
                 "Online"
               ) : (
                 "Offline"

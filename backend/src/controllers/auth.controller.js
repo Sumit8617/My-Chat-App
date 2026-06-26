@@ -2,33 +2,38 @@ import User from "../models/user.model.js";
 import { generateToken } from "../lib/utils.js";
 import bcrypt from "bcrypt";
 import cloudinary from "../lib/cloudinary.js";
-import jwt from "jsonwebtoken";
 
 export const signup = async (req, res) => {
   const { email, fullName, password } = req.body;
+
+  
+  if (!email || !fullName || !password) {
+    return res.status(400).json({ message: "All fields are required" });
+  }
+
+  const emailNormalized = email.toLowerCase().trim();
+  const passwordTrimmed = password.trim();
+
   try {
-    if (!email || !fullName || !password) {
-      return res.status(400).json({ message: "All fields are required" });
-    }
-    if (password.length < 6) {
+    if (passwordTrimmed.length < 6) {
       return res
         .status(400)
         .json({ message: "Password must be at least 6 characters long" });
     }
-    const user = await User.findOne({ email });
-    if (user) return res.status(400).json({ message: "Email already Exist" });
+    const user = await User.findOne({ email: emailNormalized });
+    if (user) return res.status(400).json({ message: "Email already exists" });
 
     const salt = await bcrypt.genSalt(10);
-    const hashPassword = await bcrypt.hash(password, salt);
+    const hashPassword = await bcrypt.hash(passwordTrimmed, salt);
 
     const newUser = new User({
-      email,
-      fullName,
+      email: emailNormalized,
+      fullName: fullName.trim(),
       password: hashPassword,
     });
     if (newUser) {
-      generateToken(newUser._id, res);
       await newUser.save();
+      generateToken(newUser._id, res);
       return res.status(201).json({
         _id: newUser._id,
         email: newUser.email,
@@ -47,32 +52,35 @@ export const signup = async (req, res) => {
 export const login = async (req, res) => {
   try {
     const { email, password } = req.body;
-    const user = await User.findOne({ email });
+    
+    if (!email || !password) {
+      return res.status(400).json({ message: "All fields are required" });
+    }
+    
+    const emailNormalized = email.toLowerCase().trim();
+    const passwordTrimmed = password.trim();
+
+    const user = await User.findOne({ email: emailNormalized });
+
 
     if (!user) {
       return res.status(400).json({ message: "Invalid credentials" });
     }
 
-    const isMatch = await bcrypt.compare(password, user.password);
+    const isMatch = await bcrypt.compare(passwordTrimmed, user.password);
     if (!isMatch) {
       return res.status(400).json({ message: "Invalid credentials" });
     }
 
-    const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, {
-      expiresIn: "7d",
-    });
-
-    res.cookie("jwt", token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
-      maxAge: 7 * 24 * 60 * 60 * 1000,
-      path: "/",
-    });
+    generateToken(user._id, res);
 
     return res.json({
       message: "Login successful",
-      user: { _id: user._id, fullName: user.fullName, email: user.email,profilePicture: user.profilePicture },
+      user: {
+        _id: user._id, 
+        fullName: user.fullName.trim(), 
+        email: user.email,
+        profilePicture: user.profilePicture },
     });
   } catch (error) {
     console.error("Error in login:", error);
@@ -106,13 +114,29 @@ export const updateProfile = async (req, res) => {
       return res.status(400).json({ message: "Profile picture is required" });
     }
 
-    const uploadResponse = await cloudinary.uploader.upload(profilePicture);
+    if (profilePicture.length > 5 * 1024 * 1024) {
+      return res.status(400).json({ message: "Image too large" });
+    }
+
+    let uploadResponse;
+
+    try {
+      uploadResponse = await cloudinary.uploader.upload(profilePicture);
+    } catch (err) {
+      return res.status(500).json({ message: "Image upload failed" });
+    }
+
     const updatedUser = await User.findByIdAndUpdate(
       userId,
       { profilePicture: uploadResponse.secure_url },
       { new: true },
     );
-    res.status(200).json(updatedUser);
+    res.status(200).json({
+      _id: updatedUser._id,
+      fullName: updatedUser.fullName.trim(),
+      email: updatedUser.email,
+      profilePicture: updatedUser.profilePicture,
+    });
   } catch (error) {
     console.log("Error in updateProfile controller:", error);
     return res.status(500).json({ message: "Internal server error" });

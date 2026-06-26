@@ -12,7 +12,7 @@ function MessageInput() {
     const fileInputRef = useRef(null)
     const inputRef = useRef(null)
     const typingTimeoutRef = useRef(null);
-
+    const typingRef = useRef(false);
 
     const {sendMessage} = useChatStore()
     const {emitTyping, emitStopTyping} = useChatStore();
@@ -44,6 +44,11 @@ function MessageInput() {
       if (!file || !file.type?.startsWith("image/")) {
           toast.error("Please select a valid image.")
           return
+      }
+
+      if (file.size > 5 * 1024 * 1024) {
+          toast.error("Image must be less than 5MB");
+          return;
       }
       
       // const reader = new FileReader()
@@ -137,10 +142,15 @@ function MessageInput() {
           e.target.style.height = "auto";
           e.target.style.height = e.target.scrollHeight + "px";
 
-          emitTyping();
+          if (!typingRef.current) {
+            emitTyping();
+            typingRef.current = true;
+          }
+
           clearTimeout(typingTimeoutRef.current);
           typingTimeoutRef.current = setTimeout(() => {
             emitStopTyping();
+            typingRef.current = false;
           }, 1200);
         }}
         onKeyDown={handleKeyDown}

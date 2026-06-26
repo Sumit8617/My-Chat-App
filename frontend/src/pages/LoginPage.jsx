@@ -3,6 +3,7 @@ import { useAuthStore } from '../store/useAuthStore'
 import AuthImagePattern from '../components/AuthImagePattern';
 import { Link } from 'react-router-dom';
 import { Eye, EyeOff, Loader2, Lock, Mail, MessageSquare} from 'lucide-react';
+import {toast} from 'react-hot-toast';
 
 
 function LoginPage() {
@@ -13,8 +14,13 @@ function LoginPage() {
   })
   const {login,isLoggingIn} = useAuthStore();
 
+  
   const handleSubmit = async(e)=>{
     e.preventDefault();
+
+    if (!formData.email || !formData.password) {
+      return toast.error("All fields are required");
+    }
     login(formData)
   }
 

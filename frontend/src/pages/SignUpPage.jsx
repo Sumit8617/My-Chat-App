@@ -44,7 +44,6 @@ const handleSubmit = async (e) => {
   if (success === true) {
     try {
       await signup(formData); 
-      navigate('/'); // navigate to home on success
     } catch (error) {
       console.log("Signup error:", error);
     }

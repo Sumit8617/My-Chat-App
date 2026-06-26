@@ -6,13 +6,6 @@ import Message from "../models/message.model.js";
 const app = express();
 const server = http.createServer(app);
 
-// Map userId -> socketId
-const userSocketMap = {};
-
-export function getReceiverSocketId(userId) {
-  return userSocketMap[userId];
-}
-
 const io = new Server(server, {
   cors: {
     origin: process.env.CORS_ORIGIN || "http://localhost:5173",
@@ -20,89 +13,96 @@ const io = new Server(server, {
   },
 });
 
+// 🔥 Track number of sockets per user (multi-tab safe)
+const userSocketCount = new Map();
+
 io.on("connection", (socket) => {
   console.log("✅ User connected:", socket.id);
 
   const userId = socket.handshake.query?.userId?.toString();
 
   if (userId && userId !== "undefined" && userId !== "null") {
-  userSocketMap[userId] = socket.id;
-  console.log(`User ${userId} mapped to socket ${socket.id}`);
-} else {
-  console.log("⚠️ Socket connected without valid userId");
-}
+    // ✅ Join room (IMPORTANT)
+    socket.join(userId);
 
-  io.emit("getOnlineUsers", Object.keys(userSocketMap));
+    // ✅ Track online users correctly (multi-tab safe)
+    const count = userSocketCount.get(userId) || 0;
+    userSocketCount.set(userId, count + 1);
 
+    io.emit("getOnlineUsers", Array.from(userSocketCount.keys()));
+
+    console.log(`User ${userId} joined room`);
+  } else {
+    console.log("⚠️ Socket connected without valid userId");
+  }
+
+  // 🔤 TYPING EVENTS
   socket.on("typing", (receiverId) => {
-    const receiverSocketId = getReceiverSocketId(receiverId);
-
-    if (receiverSocketId) {
-      io.to(receiverSocketId).emit("typing", userId);
-    }
+    if (!receiverId) return;
+    io.to(receiverId.toString()).emit("typing", userId);
   });
 
   socket.on("stopTyping", (receiverId) => {
-    const receiverSocketId = getReceiverSocketId(receiverId);
-    console.log("Typing event received for:", receiverId);
-
-    if (receiverSocketId) {
-      io.to(receiverSocketId).emit("stopTyping", userId);
-    }
+    if (!receiverId) return;
+    io.to(receiverId.toString()).emit("stopTyping", userId);
   });
 
+  // 💬 SEND MESSAGE
   socket.on("sendMessage", async (newMsg) => {
     try {
-      const receiverSocketId = getReceiverSocketId(
-        newMsg.receiverId?.toString(),
+      if (!newMsg?.senderId || !newMsg?.receiverId) return;
+
+      // send message to receiver (room)
+      io.to(newMsg.receiverId.toString()).emit("newMessage", newMsg);
+
+      // update DB → delivered
+      await Message.findByIdAndUpdate(newMsg._id, {
+        status: "delivered",
+        deliveredAt: new Date(),
+      });
+
+      newMsg.status = "delivered";
+
+      // notify sender (other tabs/devices only)
+      socket.to(newMsg.senderId.toString()).emit(
+        "messageStatusUpdated",
+        newMsg
       );
-
-      // send message to receiver
-      if (receiverSocketId) {
-        io.to(receiverSocketId).emit("newMessage", newMsg);
-
-        // update DB → delivered
-        await Message.findByIdAndUpdate(newMsg._id, {
-          status: "delivered",
-          deliveredAt: new Date(),
-        });
-
-        newMsg.status = "delivered";
-      }
-
-      // notify sender about status change
-      const senderSocketId = getReceiverSocketId(newMsg.senderId?.toString());
-
-      if (senderSocketId) {
-        io.to(senderSocketId).emit("messageStatusUpdated", newMsg);
-      }
     } catch (err) {
       console.log("sendMessage socket error:", err);
     }
   });
 
+  // ✅ READ RECEIPTS
   socket.on("markAsRead", async ({ senderId, receiverId }) => {
     try {
+      if (!senderId || !receiverId) return;
+
       await Message.updateMany(
         { senderId, receiverId, status: { $ne: "read" } },
-        { status: "read", readAt: new Date() },
+        { status: "read", readAt: new Date() }
       );
 
-      const senderSocketId = getReceiverSocketId(senderId?.toString());
-
-      if (senderSocketId) {
-        io.to(senderSocketId).emit("messagesRead", { receiverId });
-      }
+      io.to(senderId.toString()).emit("messagesRead", { receiverId });
     } catch (err) {
       console.log("markAsRead error:", err);
     }
   });
 
+  // ❌ DISCONNECT
   socket.on("disconnect", () => {
     console.log("❌ User disconnected:", socket.id);
+
     if (userId && userId !== "undefined" && userId !== "null") {
-      delete userSocketMap[userId];
-      io.emit("getOnlineUsers", Object.keys(userSocketMap));
+      const count = userSocketCount.get(userId) || 0;
+
+      if (count <= 1) {
+        userSocketCount.delete(userId);
+      } else {
+        userSocketCount.set(userId, count - 1);
+      }
+
+      io.emit("getOnlineUsers", Array.from(userSocketCount.keys()));
     }
   });
 });

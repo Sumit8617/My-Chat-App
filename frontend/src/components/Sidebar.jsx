@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useChatStore } from "../store/useChatStore";
 import SidebarSkeleton from "./skeletons/SidebarSkeleton";
 import { Users } from "lucide-react";
+import { useMemo } from "react";
 import { useAuthStore } from "../store/useAuthStore";
 
 function Sidebar({ sidebarWidth = 280 }) {
@@ -24,8 +25,11 @@ function Sidebar({ sidebarWidth = 280 }) {
     getUsers();
   }, []);
 
-  const filteredUsers = users.filter((user) => {
-    const matchesSearch = (user.fullName || "").toLowerCase()
+
+const filteredUsers = useMemo(() => {
+  return users.filter((user) => {
+    const matchesSearch = (user.fullName || "")
+      .toLowerCase()
       .includes(search.toLowerCase());
 
     const matchesOnline = showOnlineOnly
@@ -34,6 +38,7 @@ function Sidebar({ sidebarWidth = 280 }) {
 
     return matchesSearch && matchesOnline;
   });
+}, [users, search, showOnlineOnly, onlineUsers]);
 
   if (isUsersLoading) return <SidebarSkeleton />;
 
@@ -97,7 +102,7 @@ function Sidebar({ sidebarWidth = 280 }) {
             <div className={`relative ${expanded ? "" : "mx-auto"}`}>
               <img
                 src={user.profilePicture || "/avatar.png"}
-                alt={user.fullName}
+                alt={user.fullName || "User avatar"}
                 className="size-12 object-cover rounded-full"
               />
 
@@ -112,7 +117,7 @@ function Sidebar({ sidebarWidth = 280 }) {
                 <div className="font-medium truncate">{user.fullName}</div>
 
                 <div className="text-sm text-zinc-400">
-                  {typingUsers.has(user._id) ? (
+                  {typingUsers?.has(user._id) ? (
                     <span className="text-green-400 flex items-center gap-1">
                       Typing
                       <span className="flex gap-1 ml-1">

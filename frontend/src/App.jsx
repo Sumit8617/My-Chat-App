@@ -25,7 +25,7 @@ function App() {
 
     // ✅ Always runs on every refresh — no window.__appInitialized blocking it
     checkAuth();
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, []);
 
   if (isCheckingAuth)
     return (
@@ -57,6 +57,7 @@ function App() {
             path="/profile"
             element={authUser ? <ProfilePage /> : <Navigate to="/login" />}
           />
+          <Route path="*" element={<div>404 Not Found</div>} />
         </Routes>
       </div>
 
