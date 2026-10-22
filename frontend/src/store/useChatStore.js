@@ -186,9 +186,7 @@ export const useChatStore = create((set, get) => ({
 
   subscribeToTyping: () => {
     const socket = useAuthStore.getState().socket;
-    const { selectedUser } = get();
-
-    if (!selectedUser || !socket) return;
+    if (!socket) return;
 
     socket.off("typing");
     socket.off("stopTyping");

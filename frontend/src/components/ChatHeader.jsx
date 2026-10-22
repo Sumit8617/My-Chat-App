@@ -33,7 +33,7 @@ function ChatHeader() {
           <div>
             <h3 className="font-medium">{selectedUser.fullName}</h3>
             <p className="text-sm text-base-content/70">
-              {typingUsers.has(selectedUser._id) ? (
+              {(typingUsers?.has(selectedUser._id) || typingUsers?.has(selectedUser._id?.toString())) ? (
                 <span className="text-green-400 flex items-center gap-1">
                   Typing
                   <span className="flex gap-1 ml-1">

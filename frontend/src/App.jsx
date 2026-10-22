@@ -10,9 +10,15 @@ import { useAuthStore } from "./store/useAuthStore.js";
 import { Loader } from "lucide-react";
 import { Navigate } from "react-router-dom";
 import { Toaster } from "react-hot-toast";
+import { useThemeStore } from "./store/useThemeStore.js";
 
 function App() {
   const { authUser, checkAuth, isCheckingAuth } = useAuthStore();
+  const { theme } = useThemeStore();
+
+  useEffect(() => {
+    document.documentElement.setAttribute("data-theme", theme);
+  }, [theme]);
 
   useEffect(() => {
     // 🔥 Fire ping WITHOUT await — don't block checkAuth
@@ -29,13 +35,13 @@ function App() {
 
   if (isCheckingAuth)
     return (
-      <div className="flex items-center justify-center h-screen">
+      <div className="flex items-center justify-center h-screen" data-theme={theme}>
         <Loader className="size-10 animate-spin" />
       </div>
     );
 
   return (
-    <div className="h-screen flex flex-col overflow-hidden">
+    <div className="h-screen flex flex-col overflow-hidden" data-theme={theme}>
       <Navbar />
 
       <div className="flex-1 min-h-0 h-full">
