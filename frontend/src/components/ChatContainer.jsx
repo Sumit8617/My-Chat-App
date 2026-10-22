@@ -156,27 +156,32 @@ function ChatContainer() {
             <div
               key={message._id || index}
               ref={index === messages.length - 1 ? messageEndRef : null}
-              className={`flex items-end gap-2 ${
+              className={`flex items-end gap-2.5 my-1 ${
                 isOwnMessage ? "justify-end" : "justify-start"
               }`}
             >
               {!isOwnMessage && (
                 <img
                   src={selectedUser?.profilePicture || "/avatar.png"}
-                  className="w-8 h-8 rounded-full"
+                  className="size-7 rounded-full object-cover ring-2 ring-base-content/10 shrink-0 mb-1"
+                  alt={selectedUser?.fullName || "User"}
                 />
               )}
 
-              <div className="flex flex-col max-w-[75%] md:max-w-xs">
-                <span className="text-xs text-gray-400 mb-1">
+              <div className="flex flex-col max-w-[80%] sm:max-w-md">
+                <span
+                  className={`text-[10px] text-base-content/40 mb-1 px-1 ${
+                    isOwnMessage ? "text-right" : "text-left"
+                  }`}
+                >
                   {formatMessageTime(message.createdAt)}
                 </span>
 
                 <div
-                  className={`px-4 py-2 rounded-2xl shadow-sm ${
+                  className={`px-4 py-2.5 shadow-sm text-sm ${
                     isOwnMessage
-                      ? "bg-primary text-primary-content"
-                      : "bg-base-300"
+                      ? "bg-primary text-primary-content rounded-2xl rounded-br-xs shadow-primary/10"
+                      : "bg-base-200/90 text-base-content rounded-2xl rounded-bl-xs border border-base-content/5"
                   }`}
                 >
                   {message.image && (
@@ -184,19 +189,23 @@ function ChatContainer() {
                       src={message.image}
                       alt="Attachment"
                       onLoad={handleImageLoad}
-                      className="max-w-[200px] rounded-md mb-2 object-cover cursor-pointer hover:opacity-95 transition-opacity"
+                      className="max-w-[240px] rounded-xl mb-2 object-cover cursor-pointer hover:opacity-95 transition-opacity shadow-sm"
                     />
                   )}
 
-                  {message.text && <p>{message.text}</p>}
+                  {message.text && (
+                    <p className="leading-relaxed whitespace-pre-wrap break-words">
+                      {message.text}
+                    </p>
+                  )}
 
                   {isOwnMessage && (
-                    <div className="flex justify-end text-[11px] mt-1 opacity-80">
-                      {message.status === "sending" && "⏳"}
-                      {message.status === "sent" && "✓"}
-                      {message.status === "delivered" && "✓✓"}
+                    <div className="flex justify-end items-center gap-1 text-[10px] mt-1 opacity-80">
+                      {message.status === "sending" && <span>⏳</span>}
+                      {message.status === "sent" && <span>✓</span>}
+                      {message.status === "delivered" && <span>✓✓</span>}
                       {message.status === "read" && (
-                        <span className="text-sky-400">✓✓</span>
+                        <span className="text-sky-300 font-bold">✓✓</span>
                       )}
                     </div>
                   )}
@@ -206,7 +215,8 @@ function ChatContainer() {
               {isOwnMessage && (
                 <img
                   src={authUser?.profilePicture || "/avatar.png"}
-                  className="w-8 h-8 rounded-full"
+                  className="size-7 rounded-full object-cover ring-2 ring-base-content/10 shrink-0 mb-1"
+                  alt="Me"
                 />
               )}
             </div>
@@ -214,17 +224,17 @@ function ChatContainer() {
         })}
       </div>
 
-      {/* TYPING */}
+      {/* TYPING INDICATOR */}
       {isTyping && (
-        <div className="px-4 pb-2 text-sm text-zinc-400 shrink-0 flex items-center">
-          <div className="flex items-center gap-1.5 bg-base-300/80 px-3 py-1 rounded-2xl w-fit">
-            <span className="text-xs text-base-content/70">
+        <div className="px-5 pb-2.5 text-xs text-base-content/70 shrink-0 flex items-center animate-fadeIn">
+          <div className="flex items-center gap-2 bg-base-200/90 px-3.5 py-1.5 rounded-full shadow-sm border border-base-content/5">
+            <span className="font-medium text-[11px]">
               {selectedUser.fullName || "User"} is typing
             </span>
             <span className="flex gap-1 ml-0.5">
-              <span className="w-1.5 h-1.5 bg-primary rounded-full animate-bounce"></span>
-              <span className="w-1.5 h-1.5 bg-primary rounded-full animate-bounce [animation-delay:0.2s]"></span>
-              <span className="w-1.5 h-1.5 bg-primary rounded-full animate-bounce [animation-delay:0.4s]"></span>
+              <span className="size-1 bg-primary rounded-full animate-bounce"></span>
+              <span className="size-1 bg-primary rounded-full animate-bounce [animation-delay:0.2s]"></span>
+              <span className="size-1 bg-primary rounded-full animate-bounce [animation-delay:0.4s]"></span>
             </span>
           </div>
         </div>

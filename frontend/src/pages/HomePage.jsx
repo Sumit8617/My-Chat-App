@@ -46,15 +46,15 @@ function HomePage() {
   }, [isResizing]);
 
   return (
-    <div className="h-full bg-base-200">
-      <div className="h-full md:flex md:items-center md:justify-center md:pt-4 md:px-4">
+    <div className="h-full bg-base-200/40">
+      <div className="h-full md:flex md:items-center md:justify-center md:p-4">
         <div className="
           w-full h-full
           md:max-w-6xl
-          md:h-[calc(100vh-8rem)]
-          md:bg-base-100 md:rounded-lg md:shadow-xl
+          md:h-[calc(100vh-7.5rem)]
+          md:bg-base-100 md:rounded-3xl md:shadow-2xl md:border md:border-base-content/10
         ">
-          <div className="flex h-full min-h-0 rounded-lg overflow-hidden">
+          <div className="flex h-full min-h-0 md:rounded-3xl overflow-hidden">
 
             {/* SIDEBAR */}
             <div
