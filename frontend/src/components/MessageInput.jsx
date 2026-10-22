@@ -17,11 +17,7 @@ function MessageInput() {
     const {sendMessage} = useChatStore()
     const {emitTyping, emitStopTyping} = useChatStore();
 
-    // emitTyping();
-    // clearTimeout(typingTimeoutRef.current)
-    // typingTimeoutRef.current = setTimeout(() => {
-    //   emitStopTyping();
-    // }, 1500);
+
 
 
     useEffect(() => {
@@ -51,11 +47,7 @@ function MessageInput() {
           return;
       }
       
-      // const reader = new FileReader()
-      // reader.onloadend =()=>{
-      //   setImagePreview(reader.result)
-      // }
-      // reader.readAsDataURL(file)
+
       setImagePreview(file);
     }
 

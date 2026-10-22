@@ -4,7 +4,6 @@ import toast from "react-hot-toast";
 import { io } from "socket.io-client";
 
 const BASE_URL = import.meta.env.VITE_BASE_URL;
-console.log("Coming From AutSlice BASE_URL:", BASE_URL);
 
 export const useAuthStore = create((set, get) => ({
   // Initial State
@@ -18,7 +17,6 @@ export const useAuthStore = create((set, get) => ({
   socket: null,
 
   checkAuth: async () => {
-    console.log("checkAuth called");
     try {
       const res = await axiosInstance.get("/auth/check");
       const user = res.data?.user || res.data;

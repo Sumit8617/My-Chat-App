@@ -9,13 +9,14 @@ export const useChatStore = create((set, get) => ({
   selectedUser: null,
   isUsersLoading: false,
   isMessagesLoading: false,
+  hasMoreMessages: false,
+  isLoadingOlderMessages: false,
   typingUsers: new Set(),
 
   getUsers: async () => {
     set({ isUsersLoading: true });
     try {
       const res = await axiosInstance.get("/messages/users");
-      console.log("From useChatStore getUsers:", res.data);
       set({ users: res.data });
     } catch (error) {
       toast.error(error.response?.data?.message || "Something went wrong");
@@ -25,14 +26,55 @@ export const useChatStore = create((set, get) => ({
   },
 
   getMessages: async (userId) => {
-    set({ isMessagesLoading: true });
+    set({ isMessagesLoading: true, hasMoreMessages: false });
     try {
-      const res = await axiosInstance.get(`/messages/${userId}`);
-      set({ messages: res.data });
+      const res = await axiosInstance.get(`/messages/${userId}?limit=30`);
+      const fetchedMessages = Array.isArray(res.data)
+        ? res.data
+        : res.data.messages || [];
+      const hasMore = Boolean(res.data?.hasMore);
+
+      set({
+        messages: fetchedMessages,
+        hasMoreMessages: hasMore,
+      });
     } catch (error) {
       toast.error(error.response?.data?.message || "Something went wrong");
     } finally {
       set({ isMessagesLoading: false });
+    }
+  },
+
+  loadOlderMessages: async () => {
+    const { selectedUser, messages, hasMoreMessages, isLoadingOlderMessages } = get();
+    if (!selectedUser || !hasMoreMessages || isLoadingOlderMessages || messages.length === 0) {
+      return false;
+    }
+
+    set({ isLoadingOlderMessages: true });
+    try {
+      const oldestMessageId = messages[0]._id;
+      const res = await axiosInstance.get(
+        `/messages/${selectedUser._id}?cursor=${oldestMessageId}&limit=30`
+      );
+      const olderMessages = Array.isArray(res.data)
+        ? res.data
+        : res.data.messages || [];
+      const hasMore = Boolean(res.data?.hasMore);
+
+      const existingIds = new Set(messages.map((m) => m._id));
+      const filteredOlder = olderMessages.filter((m) => !existingIds.has(m._id));
+
+      set((state) => ({
+        messages: [...filteredOlder, ...state.messages],
+        hasMoreMessages: hasMore,
+      }));
+      return true;
+    } catch (error) {
+      console.error("Error loading older messages:", error);
+      return false;
+    } finally {
+      set({ isLoadingOlderMessages: false });
     }
   },
 

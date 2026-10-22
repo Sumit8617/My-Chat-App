@@ -51,6 +51,8 @@ export const getUsersForSidebar = async (req, res) => {
 export const getMessages = async (req, res) => {
   try {
     const { id: userToChatWithId } = req.params;
+    const { cursor, limit = 30 } = req.query;
+
     if (!mongoose.Types.ObjectId.isValid(userToChatWithId)) {
       return res.status(400).json({ message: "Invalid user ID" });
     }
@@ -60,21 +62,37 @@ export const getMessages = async (req, res) => {
       return res.status(401).json({ message: "Unauthorized" });
     }
     const myObjectId = new mongoose.Types.ObjectId(myId);
-    const userToChatWithObjectId = new mongoose.Types.ObjectId(
-      userToChatWithId,
-    );
+    const userToChatWithObjectId = new mongoose.Types.ObjectId(userToChatWithId);
+    const parsedLimit = Math.min(Math.max(parseInt(limit, 10) || 30, 1), 50);
 
-    const messages = await Message.find({
+    const query = {
       $or: [
         { senderId: myObjectId, receiverId: userToChatWithObjectId },
         { senderId: userToChatWithObjectId, receiverId: myObjectId },
       ],
-    })
-      .sort({ createdAt: -1 })
-      .limit(50);
-    return res.status(200).json(messages.reverse());
+    };
+
+    if (cursor && mongoose.Types.ObjectId.isValid(cursor)) {
+      query._id = { $lt: new mongoose.Types.ObjectId(cursor) };
+    }
+
+    const rawMessages = await Message.find(query)
+      .sort({ _id: -1 })
+      .limit(parsedLimit + 1)
+      .lean();
+
+    const hasMore = rawMessages.length > parsedLimit;
+    const paginatedMessages = hasMore
+      ? rawMessages.slice(0, parsedLimit)
+      : rawMessages;
+
+    return res.status(200).json({
+      messages: paginatedMessages.reverse(),
+      hasMore,
+      nextCursor: paginatedMessages.length > 0 ? paginatedMessages[0]._id : null,
+    });
   } catch (error) {
-    console.log("Error in getMessages:", error);
+    console.error("Error in getMessages:", error);
     return res.status(500).json({ message: "Internal server error" });
   }
 };
@@ -83,11 +101,6 @@ export const sendMessage = async (req, res) => {
   try {
     const text = req.body?.text;
     const image = req.file;
-
-    if (process.env.NODE_ENV === "development") {
-      console.log("TEXT:", text);
-      console.log("FILE:", image);
-    }
 
     const { id: receiverId } = req.params;
     if (!mongoose.Types.ObjectId.isValid(receiverId)) {

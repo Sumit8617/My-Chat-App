@@ -11,9 +11,7 @@ import helmet from "helmet";
 import rateLimit from "express-rate-limit";
 
 
-dotenv.config(
-    // { path : '../.env'}
-);
+dotenv.config();
 const PORT = process.env.PORT || 5000;
 const limiter = rateLimit({
   windowMs: 60 * 1000,
