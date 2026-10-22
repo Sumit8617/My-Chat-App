@@ -21,14 +21,12 @@ export const useAuthStore = create((set, get) => ({
     console.log("checkAuth called");
     try {
       const res = await axiosInstance.get("/auth/check");
-      console.log("From useAuthStore checkAuth:", res.data);
-      set({ authUser: res.data.user });
+      const user = res.data?.user || res.data;
+      set({ authUser: user });
       const socket = get().socket;
       if (!socket || !socket.connected) {
         get().connectSocket();
       }
-      
-      console.log("Auth User set in checkAuth:", res.data);
     } catch (error) {
       console.log("Error in checkAuth:", error);
       set({ authUser: null });
@@ -41,7 +39,8 @@ export const useAuthStore = create((set, get) => ({
     set({ isSigningUp: true });
     try {
       const res = await axiosInstance.post("/auth/signup", data);
-      set({ authUser: res.data.user });
+      const user = res.data?.user || res.data;
+      set({ authUser: user });
       toast.success("Account created successfully");
       const socket = get().socket;
       if (!socket || !socket.connected) {
@@ -58,8 +57,8 @@ export const useAuthStore = create((set, get) => ({
     set({ isLoggingIn: true });
     try {
       const res = await axiosInstance.post("/auth/login", data);
-      set({ authUser: res.data.user });
-      console.log("From useAuthStore login:", res.data);
+      const user = res.data?.user || res.data;
+      set({ authUser: user });
       toast.success("Logged in successfully");
       const socket = get().socket;
       if (!socket || !socket.connected) {
@@ -92,7 +91,8 @@ export const useAuthStore = create((set, get) => ({
     set({ isUpdatingProfile: true });
     try {
       const res = await axiosInstance.put("/auth/update-profile", data);
-      set({ authUser: res.data.user });
+      const user = res.data?.user || res.data;
+      set({ authUser: user });
       toast.success("Profile updated successfully");
     } catch (error) {
       console.log("error in update profile:", error);

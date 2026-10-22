@@ -14,7 +14,7 @@ function ChatContainer() {
     selectedUser,
     subscribeToMessages,
     unsubscribeFromMessages,
-    isTyping,
+    typingUsers,
     subscribeToTyping,
     unsubscribeFromTyping,
     markMessagesAsRead,
@@ -26,6 +26,18 @@ function ChatContainer() {
   const messageEndRef = useRef(null);
   const scrollContainerRef = useRef(null);
   const firstLoadRef = useRef(true);
+
+  const isTyping = Boolean(
+    selectedUser?._id &&
+      (typingUsers?.has(selectedUser._id) ||
+        typingUsers?.has(selectedUser._id.toString()))
+  );
+
+  useEffect(() => {
+    if (isTyping) {
+      messageEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [isTyping]);
 
   //  LOAD / SUBSCRIBE
   useEffect(() => {
@@ -176,8 +188,17 @@ function ChatContainer() {
 
       {/* TYPING */}
       {isTyping && (
-        <div className="px-4 pb-1 text-sm text-zinc-400 shrink-0">
-          Typing...
+        <div className="px-4 pb-2 text-sm text-zinc-400 shrink-0 flex items-center">
+          <div className="flex items-center gap-1.5 bg-base-300/80 px-3 py-1 rounded-2xl w-fit">
+            <span className="text-xs text-base-content/70">
+              {selectedUser.fullName || "User"} is typing
+            </span>
+            <span className="flex gap-1 ml-0.5">
+              <span className="w-1.5 h-1.5 bg-primary rounded-full animate-bounce"></span>
+              <span className="w-1.5 h-1.5 bg-primary rounded-full animate-bounce [animation-delay:0.2s]"></span>
+              <span className="w-1.5 h-1.5 bg-primary rounded-full animate-bounce [animation-delay:0.4s]"></span>
+            </span>
+          </div>
         </div>
       )}
 

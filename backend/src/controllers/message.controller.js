@@ -1,7 +1,7 @@
 import User from "../models/user.model.js";
 import Message from "../models/message.model.js";
 import cloudinary from "../lib/cloudinary.js";
-import { io } from "../lib/socket.js";
+import { io, userSocketCount } from "../lib/socket.js";
 import mongoose from "mongoose";
 
 export const getUsersForSidebar = async (req, res) => {
@@ -70,9 +70,9 @@ export const getMessages = async (req, res) => {
         { senderId: userToChatWithObjectId, receiverId: myObjectId },
       ],
     })
-      .sort({ _id:-1 })
+      .sort({ createdAt: -1 })
       .limit(50);
-    return res.status(200).json(messages);
+    return res.status(200).json(messages.reverse());
   } catch (error) {
     console.log("Error in getMessages:", error);
     return res.status(500).json({ message: "Internal server error" });
@@ -119,16 +119,20 @@ export const sendMessage = async (req, res) => {
       imageURL = uploadResponse.secure_url;
     }
 
+    const isReceiverOnline = (userSocketCount.get(receiverId.toString()) || 0) > 0;
+
     const newMessage = new Message({
       senderId: myObjectId,
       receiverId: receiverObjectId,
       text,
       image: imageURL,
-      status: "sent",
+      status: isReceiverOnline ? "delivered" : "sent",
+      deliveredAt: isReceiverOnline ? new Date() : null,
     });
     await newMessage.save();
+
+    // Emit real-time message to receiver
     io.to(receiverId.toString()).emit("newMessage", newMessage);
-    io.to(senderId.toString()).emit("newMessage", newMessage);
 
     return res.status(200).json(newMessage);
   } catch (error) {

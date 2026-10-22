@@ -35,10 +35,14 @@ export const signup = async (req, res) => {
       await newUser.save();
       generateToken(newUser._id, res);
       return res.status(201).json({
-        _id: newUser._id,
-        email: newUser.email,
-        fullName: newUser.fullName,
-        profilePicture: newUser.profilePicture,
+        message: "User registered successfully",
+        user: {
+          _id: newUser._id,
+          email: newUser.email,
+          fullName: newUser.fullName,
+          profilePicture: newUser.profilePicture,
+          createdAt: newUser.createdAt,
+        },
       });
     } else {
       return res.status(500).json({ message: "Invalid user data" });
@@ -80,7 +84,9 @@ export const login = async (req, res) => {
         _id: user._id, 
         fullName: user.fullName.trim(), 
         email: user.email,
-        profilePicture: user.profilePicture },
+        profilePicture: user.profilePicture,
+        createdAt: user.createdAt,
+      },
     });
   } catch (error) {
     console.error("Error in login:", error);
@@ -132,10 +138,14 @@ export const updateProfile = async (req, res) => {
       { new: true },
     );
     res.status(200).json({
-      _id: updatedUser._id,
-      fullName: updatedUser.fullName.trim(),
-      email: updatedUser.email,
-      profilePicture: updatedUser.profilePicture,
+      message: "Profile updated successfully",
+      user: {
+        _id: updatedUser._id,
+        fullName: updatedUser.fullName.trim(),
+        email: updatedUser.email,
+        profilePicture: updatedUser.profilePicture,
+        createdAt: updatedUser.createdAt,
+      },
     });
   } catch (error) {
     console.log("Error in updateProfile controller:", error);

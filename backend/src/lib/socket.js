@@ -47,27 +47,16 @@ io.on("connection", (socket) => {
     io.to(receiverId.toString()).emit("stopTyping", userId);
   });
 
-  // 💬 SEND MESSAGE
+  // 💬 SEND MESSAGE STATUS UPDATE
   socket.on("sendMessage", async (newMsg) => {
     try {
-      if (!newMsg?.senderId || !newMsg?.receiverId) return;
+      if (!newMsg?._id) return;
 
-      // send message to receiver (room)
-      io.to(newMsg.receiverId.toString()).emit("newMessage", newMsg);
-
-      // update DB → delivered
+      // Update DB to delivered if not already updated
       await Message.findByIdAndUpdate(newMsg._id, {
         status: "delivered",
         deliveredAt: new Date(),
       });
-
-      newMsg.status = "delivered";
-
-      // notify sender (other tabs/devices only)
-      socket.to(newMsg.senderId.toString()).emit(
-        "messageStatusUpdated",
-        newMsg
-      );
     } catch (err) {
       console.log("sendMessage socket error:", err);
     }
@@ -107,4 +96,4 @@ io.on("connection", (socket) => {
   });
 });
 
-export { io, app, server };
+export { io, app, server, userSocketCount };

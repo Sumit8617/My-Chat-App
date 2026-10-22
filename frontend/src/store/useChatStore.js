@@ -73,13 +73,10 @@ export const useChatStore = create((set, get) => ({
         { headers: { "Content-Type": "multipart/form-data" } },
       );
 
-      // 🔥 EMIT SOCKET AFTER SAVE
-      socket?.emit("sendMessage", res.data);
-
-      // 🔥 UPDATE optimistic message → SENT ✓
+      // Update optimistic message with server-persisted message
       set((state) => ({
         messages: state.messages.map((msg) =>
-          msg._id === tempId ? { ...res.data, status: "sent" } : msg,
+          msg._id === tempId ? res.data : msg,
         ),
       }));
 
@@ -108,7 +105,6 @@ export const useChatStore = create((set, get) => ({
       const selectedUserId = get().selectedUser?._id;
       const authUser = useAuthStore.getState().authUser;
 
-
       get().moveUserToTop(newMessage.senderId);
       if (!selectedUserId || newMessage.senderId !== selectedUserId) {
         set((state) => ({
@@ -128,14 +124,19 @@ export const useChatStore = create((set, get) => ({
         return { typingUsers: updatedTyping };
       });
 
-      if (!selectedUserId || newMessage.senderId !== selectedUserId
-      ) {
+      if (!selectedUserId || newMessage.senderId !== selectedUserId) {
         return;
       }
 
-      set((state) => ({
-        messages: [...state.messages, newMessage],
-      }));
+      set((state) => {
+        // Prevent duplicate messages in chat view
+        if (state.messages.some((m) => m._id === newMessage._id)) {
+          return state;
+        }
+        return {
+          messages: [...state.messages, newMessage],
+        };
+      });
 
       if (newMessage.receiverId === authUser._id) {
         get().markMessagesAsRead();
@@ -194,12 +195,14 @@ export const useChatStore = create((set, get) => ({
 
     socket.on("typing", (senderId) => {
       const authUser = useAuthStore.getState().authUser;
+      if (!senderId || senderId.toString() === authUser?._id?.toString()) return;
 
-      if (senderId === authUser._id) return;
       set((state) => {
-        if (state.typingUsers.has(senderId)) return state;
+        const idStr = senderId.toString();
+        if (state.typingUsers.has(idStr)) return state;
 
         const updated = new Set(state.typingUsers);
+        updated.add(idStr);
         updated.add(senderId);
 
         return { typingUsers: updated };
@@ -208,13 +211,12 @@ export const useChatStore = create((set, get) => ({
 
     socket.on("stopTyping", (senderId) => {
       const authUser = useAuthStore.getState().authUser;
-      if (!authUser) return;
+      if (!senderId || !authUser) return;
 
-      if (senderId === authUser._id) return;
       set((state) => {
-        if (!state.typingUsers.has(senderId)) return state;
-
+        const idStr = senderId.toString();
         const updated = new Set(state.typingUsers);
+        updated.delete(idStr);
         updated.delete(senderId);
 
         return { typingUsers: updated };
