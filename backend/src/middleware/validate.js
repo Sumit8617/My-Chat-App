@@ -75,6 +75,18 @@ export const getMessagesSchema = z.object({
       .string()
       .regex(/^[0-9a-fA-F]{24}$/, "Invalid user ID"),
   }),
+  query: z
+    .object({
+      cursor: z
+        .string()
+        .regex(/^[0-9a-fA-F]{24}$/, "Invalid cursor ID")
+        .optional(),
+      limit: z
+        .string()
+        .regex(/^\d+$/, "Limit must be a numeric string")
+        .optional(),
+    })
+    .optional(),
 });
 
 export const sendMessageSchema = z.object({

@@ -5,6 +5,7 @@ import MessageInput from "./MessageInput";
 import MessageSkeleton from "./skeletons/MessageSkeleton";
 import { useAuthStore } from "../store/useAuthStore";
 import { formatMessageTime } from "../libs/utils";
+import { ArrowLeft, Loader2 } from "lucide-react";
 
 function ChatContainer() {
   const {
@@ -19,6 +20,9 @@ function ChatContainer() {
     unsubscribeFromTyping,
     markMessagesAsRead,
     setSelectedUser,
+    hasMoreMessages,
+    isLoadingOlderMessages,
+    loadOlderMessages,
   } = useChatStore();
 
   const { authUser } = useAuthStore();
@@ -48,6 +52,22 @@ function ChatContainer() {
       messageEndRef.current?.scrollIntoView({ behavior: "smooth" });
     }
   }, [isTyping]);
+
+  //  INFINITE SCROLL (LOAD OLDER MESSAGES)
+  const handleScroll = async (e) => {
+    const container = e.target;
+    if (container.scrollTop < 30 && hasMoreMessages && !isLoadingOlderMessages) {
+      const prevScrollHeight = container.scrollHeight;
+      const prevScrollTop = container.scrollTop;
+
+      const loaded = await loadOlderMessages();
+      if (loaded) {
+        requestAnimationFrame(() => {
+          container.scrollTop = container.scrollHeight - prevScrollHeight + prevScrollTop;
+        });
+      }
+    }
+  };
 
   //  LOAD / SUBSCRIBE
   useEffect(() => {
@@ -117,9 +137,10 @@ function ChatContainer() {
         {/* MOBILE BACK */}
         <button
           onClick={() => setSelectedUser(null)}
-          className="md:hidden px-3 py-2 text-xl font-semibold"
+          className="md:hidden p-2.5 text-base-content/80 hover:text-base-content transition-colors"
+          aria-label="Back to contacts"
         >
-          ←
+          <ArrowLeft className="size-5" />
         </button>
 
         <div className="flex-1">
@@ -130,8 +151,15 @@ function ChatContainer() {
       {/* MESSAGES */}
       <div
         ref={scrollContainerRef}
+        onScroll={handleScroll}
         className="flex-1 overflow-y-auto p-4 space-y-4"
       >
+        {/* LOADING OLDER MESSAGES SPINNER */}
+        {isLoadingOlderMessages && (
+          <div className="flex justify-center py-2">
+            <Loader2 className="size-5 animate-spin text-primary" />
+          </div>
+        )}
         {messages.map((message, index) => {
           const isOwnMessage =
             message.senderId?.toString() === authUser?._id?.toString();

@@ -44,15 +44,16 @@ const messageSchema = new mongoose.Schema(
 );
 
 
-// 🔥 COMPOUND INDEXES (VERY IMPORTANT for performance)
+// 🔥 COMPOUND INDEXES (OPTIMIZED for conversation queries, pagination and unread counts)
 
-// Fast chat queries (sender ↔ receiver)
-messageSchema.index({ senderId: 1, receiverId: 1 });
+// Fast conversation lookups & cursor pagination (bidirectional)
+messageSchema.index({ senderId: 1, receiverId: 1, _id: -1 });
+messageSchema.index({ receiverId: 1, senderId: 1, _id: -1 });
 
-// Fast unread count queries
+// Fast unread count & delivery status queries
 messageSchema.index({ receiverId: 1, status: 1 });
 
-// Fast sorting (pagination, latest messages)
+// Fast sorting fallback
 messageSchema.index({ createdAt: -1 });
 
 
