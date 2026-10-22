@@ -13,6 +13,8 @@ function Sidebar({ sidebarWidth = 280 }) {
     setSelectedUser,
     isUsersLoading,
     typingUsers,
+    subscribeToTyping,
+    unsubscribeFromTyping,
   } = useChatStore();
 
   const { onlineUsers } = useAuthStore();
@@ -23,6 +25,8 @@ function Sidebar({ sidebarWidth = 280 }) {
   const expanded = sidebarWidth > 250;   
   useEffect(() => {
     getUsers();
+    subscribeToTyping();
+    return () => unsubscribeFromTyping();
   }, []);
 
 
@@ -117,7 +121,7 @@ const filteredUsers = useMemo(() => {
                 <div className="font-medium truncate">{user.fullName}</div>
 
                 <div className="text-sm text-zinc-400">
-                  {typingUsers?.has(user._id) ? (
+                  {(typingUsers?.has(user._id) || typingUsers?.has(user._id?.toString())) ? (
                     <span className="text-green-400 flex items-center gap-1">
                       Typing
                       <span className="flex gap-1 ml-1">

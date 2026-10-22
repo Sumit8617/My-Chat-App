@@ -33,6 +33,16 @@ function ChatContainer() {
         typingUsers?.has(selectedUser._id.toString()))
   );
 
+  const handleImageLoad = () => {
+    const container = scrollContainerRef.current;
+    if (!container) return;
+    const nearBottom =
+      container.scrollHeight - container.scrollTop - container.clientHeight < 300;
+    if (nearBottom || firstLoadRef.current) {
+      messageEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    }
+  };
+
   useEffect(() => {
     if (isTyping) {
       messageEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -156,7 +166,9 @@ function ChatContainer() {
                   {message.image && (
                     <img
                       src={message.image}
-                      className="max-w-[200px] rounded-md mb-2"
+                      alt="Attachment"
+                      onLoad={handleImageLoad}
+                      className="max-w-[200px] rounded-md mb-2 object-cover cursor-pointer hover:opacity-95 transition-opacity"
                     />
                   )}
 
