@@ -101,3 +101,11 @@ export const sendMessageSchema = z.object({
     text: z.string().max(5000, "Message text cannot exceed 5000 characters").optional(),
   }).optional(),
 });
+
+export const deleteMessageSchema = z.object({
+  params: z.object({
+    id: z
+      .string()
+      .regex(/^[0-9a-fA-F]{24}$/, "Invalid message ID"),
+  }),
+});

@@ -1,11 +1,11 @@
-import { useEffect, useRef } from "react";
+import React, { useEffect, useRef } from "react";
 import { useChatStore } from "../store/useChatStore";
 import ChatHeader from "./ChatHeader";
 import MessageInput from "./MessageInput";
 import MessageSkeleton from "./skeletons/MessageSkeleton";
 import { useAuthStore } from "../store/useAuthStore";
-import { formatMessageTime } from "../libs/utils";
-import { ArrowLeft, Loader2 } from "lucide-react";
+import { formatMessageTime, formatMessageDate, isDifferentDay } from "../libs/utils";
+import { ArrowLeft, Loader2, Trash2 } from "lucide-react";
 
 function ChatContainer() {
   const {
@@ -19,6 +19,7 @@ function ChatContainer() {
     hasMoreMessages,
     isLoadingOlderMessages,
     loadOlderMessages,
+    deleteMessage,
   } = useChatStore();
 
   const { authUser } = useAuthStore();
@@ -152,74 +153,103 @@ function ChatContainer() {
           const isOwnMessage =
             message.senderId?.toString() === authUser?._id?.toString();
 
+          const prevMessage = index > 0 ? messages[index - 1] : null;
+          const showDateDivider =
+            index === 0 || isDifferentDay(message.createdAt, prevMessage?.createdAt);
+
           return (
-            <div
-              key={message._id || index}
-              ref={index === messages.length - 1 ? messageEndRef : null}
-              className={`flex items-end gap-2.5 my-1 ${
-                isOwnMessage ? "justify-end" : "justify-start"
-              }`}
-            >
-              {!isOwnMessage && (
-                <img
-                  src={selectedUser?.profilePicture || "/avatar.png"}
-                  className="size-7 rounded-full object-cover ring-2 ring-base-content/10 shrink-0 mb-1"
-                  alt={selectedUser?.fullName || "User"}
-                />
+            <React.Fragment key={message._id || index}>
+              {/* WHATSAPP-STYLE DATE DIVIDER PILL */}
+              {showDateDivider && (
+                <div className="flex justify-center my-3 w-full">
+                  <span className="bg-base-300/80 backdrop-blur-md text-base-content/75 text-[11px] font-semibold px-3.5 py-1 rounded-full shadow-xs border border-base-content/5 select-none tracking-wide">
+                    {formatMessageDate(message.createdAt)}
+                  </span>
+                </div>
               )}
 
-              <div className="flex flex-col max-w-[80%] sm:max-w-md">
-                <span
-                  className={`text-[10px] text-base-content/40 mb-1 px-1 ${
-                    isOwnMessage ? "text-right" : "text-left"
-                  }`}
-                >
-                  {formatMessageTime(message.createdAt)}
-                </span>
+              <div
+                ref={index === messages.length - 1 ? messageEndRef : null}
+                className={`flex items-end gap-2 my-1 group ${
+                  isOwnMessage ? "justify-end" : "justify-start"
+                }`}
+              >
+                {/* DELETE BUTTON for sender (appears on hover) */}
+                {isOwnMessage && (
+                  <button
+                    onClick={() => deleteMessage(message._id)}
+                    className="opacity-0 group-hover:opacity-100 transition-all p-1.5 rounded-full hover:bg-error/15 text-base-content/40 hover:text-error cursor-pointer shrink-0 mb-1"
+                    title="Delete message"
+                    aria-label="Delete message"
+                  >
+                    <Trash2 className="size-3.5" />
+                  </button>
+                )}
 
-                <div
-                  className={`px-4 py-2.5 shadow-sm text-sm ${
-                    isOwnMessage
-                      ? "bg-primary text-primary-content rounded-2xl rounded-br-xs shadow-primary/10"
-                      : "bg-base-200/90 text-base-content rounded-2xl rounded-bl-xs border border-base-content/5"
-                  }`}
-                >
-                  {message.image && (
-                    <img
-                      src={message.image}
-                      alt="Attachment"
-                      onLoad={handleImageLoad}
-                      className="max-w-[240px] rounded-xl mb-2 object-cover cursor-pointer hover:opacity-95 transition-opacity shadow-sm"
-                    />
-                  )}
+                {!isOwnMessage && (
+                  <img
+                    src={selectedUser?.profilePicture || "/avatar.png"}
+                    className="size-7 rounded-full object-cover ring-2 ring-base-content/10 shrink-0 mb-1"
+                    alt={selectedUser?.fullName || "User"}
+                  />
+                )}
 
-                  {message.text && (
-                    <p className="leading-relaxed whitespace-pre-wrap break-words">
-                      {message.text}
-                    </p>
-                  )}
+                <div className="flex flex-col max-w-[80%] sm:max-w-md">
+                  <div
+                    className={`px-3.5 py-2 shadow-sm text-sm ${
+                      isOwnMessage
+                        ? "bg-primary text-primary-content rounded-2xl rounded-br-xs shadow-primary/10"
+                        : "bg-base-200/90 text-base-content rounded-2xl rounded-bl-xs border border-base-content/5"
+                    }`}
+                  >
+                    {message.image && (
+                      <img
+                        src={message.image}
+                        alt="Attachment"
+                        onLoad={handleImageLoad}
+                        className="max-w-[240px] rounded-xl mb-1.5 object-cover cursor-pointer hover:opacity-95 transition-opacity shadow-sm"
+                      />
+                    )}
 
-                  {isOwnMessage && (
-                    <div className="flex justify-end items-center gap-1 text-[10px] mt-1 opacity-80">
-                      {message.status === "sending" && <span>⏳</span>}
-                      {message.status === "sent" && <span>✓</span>}
-                      {message.status === "delivered" && <span>✓✓</span>}
-                      {message.status === "read" && (
-                        <span className="text-sky-300 font-bold">✓✓</span>
+                    {message.text && (
+                      <p className="leading-relaxed whitespace-pre-wrap break-words">
+                        {message.text}
+                      </p>
+                    )}
+
+                    {/* Embedded Time & WhatsApp Ticks inside bubble */}
+                    <div
+                      className={`flex items-center gap-1.5 text-[10px] mt-0.5 select-none ${
+                        isOwnMessage
+                          ? "justify-end text-primary-content/80"
+                          : "justify-end text-base-content/50"
+                      }`}
+                    >
+                      <span>{formatMessageTime(message.createdAt)}</span>
+
+                      {isOwnMessage && (
+                        <span className="flex items-center">
+                          {message.status === "sending" && <span>⏳</span>}
+                          {message.status === "sent" && <span>✓</span>}
+                          {message.status === "delivered" && <span>✓✓</span>}
+                          {message.status === "read" && (
+                            <span className="text-sky-300 font-bold">✓✓</span>
+                          )}
+                        </span>
                       )}
                     </div>
-                  )}
+                  </div>
                 </div>
-              </div>
 
-              {isOwnMessage && (
-                <img
-                  src={authUser?.profilePicture || "/avatar.png"}
-                  className="size-7 rounded-full object-cover ring-2 ring-base-content/10 shrink-0 mb-1"
-                  alt="Me"
-                />
-              )}
-            </div>
+                {isOwnMessage && (
+                  <img
+                    src={authUser?.profilePicture || "/avatar.png"}
+                    className="size-7 rounded-full object-cover ring-2 ring-base-content/10 shrink-0 mb-1"
+                    alt="Me"
+                  />
+                )}
+              </div>
+            </React.Fragment>
           );
         })}
       </div>

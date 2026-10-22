@@ -204,6 +204,26 @@ export const useChatStore = create((set, get) => ({
         ),
       }));
     });
+
+    // MESSAGE DELETED
+    socket.on("messageDeleted", ({ messageId }) => {
+      set((state) => ({
+        messages: state.messages.filter((m) => m._id !== messageId),
+      }));
+    });
+  },
+
+  deleteMessage: async (messageId) => {
+    try {
+      await axiosInstance.delete(`/messages/${messageId}`);
+      set((state) => ({
+        messages: state.messages.filter((m) => m._id !== messageId),
+      }));
+      toast.success("Message deleted");
+    } catch (error) {
+      console.error("Error deleting message:", error);
+      toast.error(error.response?.data?.message || "Failed to delete message");
+    }
   },
 
   markMessagesAsRead: () => {
@@ -226,6 +246,7 @@ export const useChatStore = create((set, get) => ({
     socket.off("newMessage");
     socket.off("messageStatusUpdated");
     socket.off("messagesRead");
+    socket.off("messageDeleted");
   },
 
   subscribeToTyping: () => {
