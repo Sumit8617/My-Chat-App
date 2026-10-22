@@ -19,12 +19,14 @@ export const validate = (schema) => (req, res, next) => {
       });
     }
 
-    if (result.data.body) req.body = result.data.body;
-    if (result.data.params) req.params = result.data.params;
-    if (result.data.query) req.query = result.data.query;
+    if (result.data.body && typeof req.body === "object") {
+      Object.assign(req.body, result.data.body);
+    }
+    req.validated = result.data;
 
     next();
   } catch (err) {
+    console.error("VALIDATION RUNTIME ERROR:", err);
     return res.status(400).json({ message: "Invalid request payload" });
   }
 };
