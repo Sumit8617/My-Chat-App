@@ -12,10 +12,9 @@ function MessageInput() {
     const fileInputRef = useRef(null)
     const inputRef = useRef(null)
     const typingTimeoutRef = useRef(null);
-    const typingRef = useRef(false);
+    const lastTypingTimeRef = useRef(0);
 
-    const {sendMessage} = useChatStore()
-    const {emitTyping, emitStopTyping} = useChatStore();
+    const {sendMessage, emitTyping, emitStopTyping} = useChatStore();
 
 
 
@@ -134,16 +133,17 @@ function MessageInput() {
           e.target.style.height = "auto";
           e.target.style.height = e.target.scrollHeight + "px";
 
-          if (!typingRef.current) {
+          const now = Date.now();
+          if (!lastTypingTimeRef.current || now - lastTypingTimeRef.current > 1500) {
             emitTyping();
-            typingRef.current = true;
+            lastTypingTimeRef.current = now;
           }
 
           clearTimeout(typingTimeoutRef.current);
           typingTimeoutRef.current = setTimeout(() => {
             emitStopTyping();
-            typingRef.current = false;
-          }, 1200);
+            lastTypingTimeRef.current = 0;
+          }, 1500);
         }}
         onKeyDown={handleKeyDown}
         className="flex-1 textarea textarea-bordered rounded-xl resize-none overflow-hidden min-h-[42px] max-h-[120px]"

@@ -2,7 +2,9 @@ import { create } from "zustand";
 import { axiosInstance } from "../libs/axios.js";
 import toast from "react-hot-toast";
 import { useAuthStore } from "./useAuthStore.js";
-
+ 
+const typingTimeouts = new Map();
+ 
 export const useChatStore = create((set, get) => ({
   messages: [],
   users: [],
@@ -237,8 +239,26 @@ export const useChatStore = create((set, get) => ({
       const authUser = useAuthStore.getState().authUser;
       if (!senderId || senderId.toString() === authUser?._id?.toString()) return;
 
+      const idStr = senderId.toString();
+
+      // Reset auto-clear timeout (clear typing indicator after 3.5s if stopTyping event was dropped)
+      if (typingTimeouts.has(idStr)) {
+        clearTimeout(typingTimeouts.get(idStr));
+      }
+
+      const timeout = setTimeout(() => {
+        set((state) => {
+          const updated = new Set(state.typingUsers);
+          updated.delete(idStr);
+          updated.delete(senderId);
+          return { typingUsers: updated };
+        });
+        typingTimeouts.delete(idStr);
+      }, 3500);
+
+      typingTimeouts.set(idStr, timeout);
+
       set((state) => {
-        const idStr = senderId.toString();
         if (state.typingUsers.has(idStr)) return state;
 
         const updated = new Set(state.typingUsers);
@@ -253,8 +273,13 @@ export const useChatStore = create((set, get) => ({
       const authUser = useAuthStore.getState().authUser;
       if (!senderId || !authUser) return;
 
+      const idStr = senderId.toString();
+      if (typingTimeouts.has(idStr)) {
+        clearTimeout(typingTimeouts.get(idStr));
+        typingTimeouts.delete(idStr);
+      }
+
       set((state) => {
-        const idStr = senderId.toString();
         const updated = new Set(state.typingUsers);
         updated.delete(idStr);
         updated.delete(senderId);
@@ -266,27 +291,32 @@ export const useChatStore = create((set, get) => ({
 
   unsubscribeFromTyping: () => {
     const socket = useAuthStore.getState().socket;
-    if (!socket) return;
-    socket.off("typing");
-    socket.off("stopTyping");
+    if (socket) {
+      socket.off("typing");
+      socket.off("stopTyping");
+    }
+    for (const timeout of typingTimeouts.values()) {
+      clearTimeout(timeout);
+    }
+    typingTimeouts.clear();
   },
 
   emitTyping: () => {
     const socket = useAuthStore.getState().socket;
     const { selectedUser } = get();
 
-    if (!selectedUser || !socket) return;
+    if (!selectedUser?._id || !socket) return;
 
-    socket.emit("typing", selectedUser._id);
+    socket.emit("typing", selectedUser._id.toString());
   },
 
   emitStopTyping: () => {
     const socket = useAuthStore.getState().socket;
     const { selectedUser } = get();
 
-    if (!selectedUser || !socket) return;
+    if (!selectedUser?._id || !socket) return;
 
-    socket.emit("stopTyping", selectedUser._id);
+    socket.emit("stopTyping", selectedUser._id.toString());
   },
 
   moveUserToTop: (userId) => {

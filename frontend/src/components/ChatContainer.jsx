@@ -13,11 +13,7 @@ function ChatContainer() {
     getMessages,
     isMessagesLoading,
     selectedUser,
-    subscribeToMessages,
-    unsubscribeFromMessages,
     typingUsers,
-    subscribeToTyping,
-    unsubscribeFromTyping,
     markMessagesAsRead,
     setSelectedUser,
     hasMoreMessages,
@@ -69,20 +65,12 @@ function ChatContainer() {
     }
   };
 
-  //  LOAD / SUBSCRIBE
+  // 🔄 LOAD / MARK READ
   useEffect(() => {
     if (!selectedUser?._id) return;
 
     getMessages(selectedUser._id);
     markMessagesAsRead();
-
-    subscribeToMessages();
-    subscribeToTyping();
-
-    return () => {
-      unsubscribeFromMessages();
-      unsubscribeFromTyping();
-    };
   }, [selectedUser?._id]);
 
   //  SMART AUTO SCROLL

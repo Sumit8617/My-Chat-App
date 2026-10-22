@@ -7,14 +7,16 @@ import LoginPage from "./pages/LoginPage.jsx";
 import SettingsPage from "./pages/SettingsPage.jsx";
 import ProfilePage from "./pages/ProfilePage.jsx";
 import { useAuthStore } from "./store/useAuthStore.js";
+import { useChatStore } from "./store/useChatStore.js";
 import { Loader } from "lucide-react";
 import { Navigate } from "react-router-dom";
 import { Toaster } from "react-hot-toast";
 import { useThemeStore } from "./store/useThemeStore.js";
 
 function App() {
-  const { authUser, checkAuth, isCheckingAuth } = useAuthStore();
+  const { authUser, checkAuth, isCheckingAuth, socket } = useAuthStore();
   const { theme } = useThemeStore();
+  const { subscribeToMessages, unsubscribeFromMessages, subscribeToTyping, unsubscribeFromTyping } = useChatStore();
 
   useEffect(() => {
     document.documentElement.setAttribute("data-theme", theme);
@@ -32,6 +34,19 @@ function App() {
     // ✅ Always runs on every refresh — no window.__appInitialized blocking it
     checkAuth();
   }, []);
+
+  // 🔌 Attach global socket listeners as soon as socket connects
+  useEffect(() => {
+    if (!socket) return;
+
+    subscribeToMessages();
+    subscribeToTyping();
+
+    return () => {
+      unsubscribeFromMessages();
+      unsubscribeFromTyping();
+    };
+  }, [socket]);
 
   if (isCheckingAuth)
     return (
